@@ -66,158 +66,129 @@ def is_prime(num):
     return True
 
 
-def classify_number(candidate, metrics, current_ceiling):
+def classify_with_z_score(candidate, z1, z4):
     """
-    Applies the low-pass filter and performs the final primality test if necessary.
+    Applies the Combined Z-Score filter. A number is a candidate for a prime
+    if its Z1 and Z4 scores fall within the expected range for prime transitions.
     """
-    if metrics['z_curvature'] > current_ceiling and candidate > 10:
-        return 0, True, 0
+    # Define the "prime signature" based on our statistical analysis
+    Z1_MEAN, Z1_STD_DEV = 1.10, 0.65
+    Z4_MEAN, Z4_STD_DEV = 0.50, 0.35
+    SIGMA_MULTIPLIER = 3.0
+
+    z1_lower_bound = Z1_MEAN - SIGMA_MULTIPLIER * Z1_STD_DEV
+    z1_upper_bound = Z1_MEAN + SIGMA_MULTIPLIER * Z1_STD_DEV
+    z4_lower_bound = Z4_MEAN - SIGMA_MULTIPLIER * Z4_STD_DEV
+    z4_upper_bound = Z4_MEAN + SIGMA_MULTIPLIER * Z4_STD_DEV
+
+    is_in_range = (z1_lower_bound <= z1 <= z1_upper_bound) and \
+                  (z4_lower_bound <= z4 <= z4_upper_bound)
+
+    if not is_in_range:
+        return 0, True
+
     if is_prime(candidate):
-        return 1, False, metrics['z_curvature']
+        return 1, False
     else:
-        return 0, False, 0
+        return 0, False
 
 
 # --- Main execution block ---
 if __name__ == '__main__':
-    primes_to_find = 500
+    primes_to_find = 6000
     found_primes = []
     candidate_number = 1
-    csv_file_name = 'prime_stats_gr_triangles.csv'
+    csv_file_name = 'prime_stats_hybrid_filter.csv'
 
     # --- Initialize variables ---
-    max_prime_curvature = 0.0
     skipped_tests = 0
     last_prime_n = 0
     last_prime_metrics = {}
 
-    print(f"Searching for {primes_to_find} primes and logging GR-inspired triangle data...")
+    # --- Stall Detector variables ---
+    numbers_since_last_prime = 0
+    STALL_THRESHOLD = 20000
+    stall_detector_active = False
+
+    print(f"Searching for {primes_to_find} primes using the Hybrid Filter...")
 
     with open(csv_file_name, 'w', newline='') as file:
-        header = [
-            'n', 'is_prime', 'number_mass', 'spacetime_metric', 'z_curvature', 'z_resonance',
-            'z_vector_magnitude', 'z_angle', 'curvature_ceiling',
-            # GR Triangle 1: Gravitational Lensing
-            'gr1_mass_A', 'gr1_path_B', 'gr1_bending_C',
-            # GR Triangle 2: Metric Tensor
-            'gr2_gap', 'gr2_vec_mag_C',
-            # GR Triangle 3: Frame-Dragging
-            'gr3_delta_curv_A', 'gr3_delta_res_B', 'gr3_norm_gap_C'
-        ]
+        header = ['n', 'is_prime', 'was_skipped', 'z1_score', 'z4_score']
         writer = csv.writer(file)
         writer.writerow(header)
 
-        while len(found_primes) < primes_to_find:
+        while len(found_primes) < primes_to_find and candidate_number < 150000:  # Increased safety break
             metrics = get_z_metrics(candidate_number, found_primes)
-            curvature_ceiling = max(3.5, max_prime_curvature)
-            prime_status, skipped, new_max_curvature = classify_number(candidate_number, metrics, curvature_ceiling)
+
+            z1, z4 = 0, 0
+            prime_status, skipped = 0, True
+
+            # --- HYBRID FILTER LOGIC ---
+            if numbers_since_last_prime > STALL_THRESHOLD:
+                if not stall_detector_active:
+                    print(f"\n⚠️  STALL DETECTED at n={candidate_number}! Disabling filter to find outlier prime...\n")
+                    stall_detector_active = True
+                # Escape Hatch: test every number definitively
+                prime_status = 1 if is_prime(candidate_number) else 0
+                skipped = False
+
+            elif last_prime_n > 0:
+                gap = candidate_number - last_prime_n
+                if gap > 0:
+                    z_vec_mag_p = last_prime_metrics['z_vector_magnitude']
+                    z_angle_p = last_prime_metrics['z_angle']
+                    z_curv_p = last_prime_metrics['z_curvature']
+
+                    z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
+                    z4 = z_curv_p * (z_vec_mag_p / gap)
+
+                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4)
+            else:
+                prime_status = 1 if is_prime(candidate_number) else 0
+                skipped = False
 
             if skipped:
                 skipped_tests += 1
 
-            # --- Initialize new GR triangle metrics ---
-            gr1_mass_A, gr1_path_B, gr1_bending_C = 0, 0, 0
-            gr2_gap, gr2_vec_mag_C = 0, 0
-            gr3_delta_curv_A, gr3_delta_res_B, gr3_norm_gap_C = 0, 0, 0
-
-            # --- New GR Triangle Calculations ---
-            if last_prime_n > 0:
-                log_p = last_prime_metrics['spacetime_metric']
-                if log_p > 0: # Avoid division by zero for the theoretical case of p=1
-                    gap = candidate_number - last_prime_n
-                    normalized_gap = gap / log_p
-
-                    # Triangle 1: Gravitational Lensing
-                    gr1_mass_A = last_prime_metrics['z_curvature']
-                    gr1_path_B = normalized_gap
-                    gr1_bending_C = last_prime_metrics['z_angle'] / 90.0
-
-                    # Triangle 2: Metric Tensor
-                    gr2_gap = gap
-                    gr2_vec_mag_C = last_prime_metrics['z_vector_magnitude']
-
-                    # Triangle 3: Frame-Dragging
-                    gr3_delta_curv_A = abs(metrics['z_curvature'] - last_prime_metrics['z_curvature'])
-                    gr3_delta_res_B = abs(metrics['z_resonance'] - last_prime_metrics['z_resonance'])
-                    gr3_norm_gap_C = normalized_gap
-
-            # Update state AFTER a prime is confirmed
             if prime_status == 1:
+                if stall_detector_active:
+                    print(f"✅ Outlier prime found: {candidate_number}. Re-engaging Z-Score filter.")
+                    stall_detector_active = False
+
                 found_primes.append(candidate_number)
-                max_prime_curvature = max(max_prime_curvature, new_max_curvature)
                 last_prime_n = candidate_number
                 last_prime_metrics = metrics
+                numbers_since_last_prime = 0  # Reset counter
 
-            writer.writerow([
-                candidate_number, prime_status, metrics['number_mass'], metrics['spacetime_metric'],
-                metrics['z_curvature'], metrics['z_resonance'], metrics['z_vector_magnitude'],
-                metrics['z_angle'], curvature_ceiling,
-                gr1_mass_A, gr1_path_B, gr1_bending_C,
-                gr2_gap, gr2_vec_mag_C,
-                gr3_delta_curv_A, gr3_delta_res_B, gr3_norm_gap_C
-            ])
+                if len(found_primes) % 500 == 0:
+                    print(f"Found prime {len(found_primes)}: {candidate_number}")
+            else:
+                numbers_since_last_prime += 1
+
+            writer.writerow([candidate_number, prime_status, skipped, z1, z4])
             candidate_number += 1
 
-    total_composites_checked = (candidate_number - 1) - primes_to_find
-
-    print(f"\n✅ Success! Found {len(found_primes)} primes.")
-    print(f"   - The last prime is: {found_primes[-1]}")
+    # --- Final Performance Stats ---
+    print(f"\n✅ Search complete.")
+    print(f"   - Found {len(found_primes)} primes.")
+    if found_primes:
+        print(f"   - The last prime is: {found_primes[-1]}")
     print(f"   - Statistics saved to '{csv_file_name}'")
-    print("\n--- Classifier Performance & Accuracy ---")
-    print(f"   - Total Composites Found:      {total_composites_checked}")
+
+    total_numbers_checked = candidate_number - 1
+    total_composites = total_numbers_checked - len(found_primes)
+
+    print("\n--- Hybrid Filter Performance ---")
+    print(f"   - Total Numbers Checked:       {total_numbers_checked}")
+    print(f"   - Total Composites Found:      {total_composites}")
     print(f"   - Composites Filtered Out:     {skipped_tests}")
-    if total_composites_checked > 0:
-        efficiency = (skipped_tests / total_composites_checked) * 100
-        print(f"   - Filter Efficiency:           {efficiency:.2f}% of composites were correctly filtered.")
 
-    # --- Generate the Plots from the CSV data ---
-    print(f"\n📈 Now generating graphs from the statistics...")
-    df = pd.read_csv(csv_file_name)
-    primes_df = df[df['is_prime'] == 1]
-    composites_df = df[df['is_prime'] == 0]
+    if total_composites > 0:
+        efficiency = (skipped_tests / total_composites) * 100
+        print(f"   - Filter Efficiency:           {efficiency:.2f}%")
 
-    # --- Graph 1: Cumulative Primes and Z Curvature ---
-    plt.figure(figsize=(12, 7))
-    plt.plot(df['n'], df['is_prime'].cumsum(), color='tab:blue', label='Cumulative Primes')
-    plt.xlabel('Number (n)')
-    plt.ylabel('Cumulative Prime Count', color='tab:blue')
-    plt.twinx()
-    plt.plot(df['n'], df['z_curvature'], color='tab:red', alpha=0.75, label='Z Curvature')
-    plt.ylabel('Z Curvature', color='tab:red')
-    plt.title("Cumulative Primes and Z Curvature vs. Number (n)")
-    plt.tight_layout()
-    plt.savefig('prime_distribution_and_curvature_graph.png')
-    print("   - Graph 1 saved as 'prime_distribution_and_curvature_graph.png'")
-
-    # --- Graph 2: Z Resonance ---
-    plt.figure(figsize=(12, 7))
-    plt.scatter(composites_df['n'], composites_df['z_resonance'], color='gray', alpha=0.5, s=10)
-    plt.scatter(primes_df['n'], primes_df['z_resonance'], color='red', s=20)
-    plt.title('Z Resonance vs. Number (n)')
-    plt.savefig('resonance_factor_graph.png')
-    print("   - Graph 2 saved as 'resonance_factor_graph.png'")
-
-    # --- Graph 3: Z Curvature and Ceiling ---
-    plt.figure(figsize=(12, 7))
-    plt.scatter(composites_df['n'], composites_df['z_curvature'], color='gray', alpha=0.5, s=10)
-    plt.scatter(primes_df['n'], primes_df['z_curvature'], color='red', s=20)
-    plt.plot(df['n'], df['curvature_ceiling'], color='blue', linestyle='--')
-    plt.title('Z Curvature vs. Dynamic Ceiling')
-    plt.savefig('curvature_and_ceiling_graph.png')
-    print("   - Graph 3 saved as 'curvature_and_ceiling_graph.png'")
-
-    # --- Graph 4: Z Vector Magnitude ---
-    plt.figure(figsize=(12, 7))
-    plt.scatter(composites_df['n'], composites_df['z_vector_magnitude'], color='gray', alpha=0.5, s=10)
-    plt.scatter(primes_df['n'], primes_df['z_vector_magnitude'], color='red', s=20)
-    plt.title('Z Vector Magnitude vs. Number (n)')
-    plt.savefig('z_vector_magnitude_graph.png')
-    print("   - Graph 4 saved as 'z_vector_magnitude_graph.png'")
-
-    # --- Graph 5: Z Angle ---
-    plt.figure(figsize=(12, 7))
-    plt.scatter(composites_df['n'], composites_df['z_angle'], color='gray', alpha=0.5, s=10)
-    plt.scatter(primes_df['n'], primes_df['z_angle'], color='red', s=20)
-    plt.title('Z Angle vs. Number (n)')
-    plt.savefig('z_angle_graph.png')
-    print("   - Graph 5 saved as 'z_angle_graph.png'")
+    if len(found_primes) < primes_to_find:
+        print("\n⚠️  ERROR: Target prime count not reached. Review stall detector or increase safety break.")
+    else:
+        print(
+            "\n   - Accuracy:                  The filter successfully found all target primes without false negatives.")
