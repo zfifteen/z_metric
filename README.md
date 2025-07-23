@@ -1,8 +1,4 @@
-Here is a complete Markdown version of the Z-Curvature Prime Detector and GR Triangle formalism, adapted for use in GitHub READMEs, Jupyter notebooks, or documentation:
-
-⸻
-
-🧠 Z-Curvature Prime Detection and GR Triangle Formalism
+Here is a complete Markdown version of the Z-Curvature Prime Detector and GR 🧠 Z-Curvature Prime Detection and GR Triangle Formalism
 
 ⸻
 
