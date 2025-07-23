@@ -1,7 +1,3 @@
-Here is a complete Markdown version of the Z-Curvature Prime Detector and GR 🧠 Z-Curvature Prime Detection and GR Triangle Formalism
-
-⸻
-
 1. Z-Curvature and Prime Filtering
 
 Let:
