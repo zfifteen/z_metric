@@ -2,6 +2,7 @@ import math
 import csv
 import time  # Added for performance tracking
 from functools import lru_cache  # Added for memoization
+from collections import deque  # Added for rolling statistics
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -89,8 +90,6 @@ def is_prime(n):
         r += 1
 
     # Use a set of bases that are deterministic for numbers up to a very high limit.
-    # For n < 3,317,044,064,279,37, these bases are sufficient.
-    # Our range is much smaller, so this is more than safe.
     bases = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
     if n < 341550071728321:
         bases = [2, 3, 5, 7, 11, 13, 17]
@@ -116,28 +115,24 @@ def is_prime(n):
     return True
 
 
-def classify_with_z_score(candidate, z1, z4, candidate_metrics):
+def classify_with_z_score(candidate, z1, z4, candidate_metrics, z1_mean, z1_std, z4_mean, z4_std):
     """
-    Applies the Combined Z-Score filter using a dynamically derived multiplier.
+    Applies the Combined Z-Score filter using a dynamically derived multiplier
+    and rolling statistical measures.
     """
-    # Base statistical signature
-    Z1_MEAN, Z1_STD_DEV = 0.49, 0.56
-    Z4_MEAN, Z4_STD_DEV = 2.22, 2.09
-
     # Derive the SIGMA_MULTIPLIER from the candidate's own properties.
-    # This eliminates the "magic number" and makes the filter truly adaptive.
     d_n = candidate_metrics['number_mass']
     if d_n == 0:  # Handle n=0 edge case.
         d_n = 1
 
         # The multiplier is derived from the Spacetime-Curvature Ratio.
-    # For primes (d(n)=2), this is ~5.0. For composites, it's smaller.
     SIGMA_MULTIPLIER = 1.3 + (math.e ** 2 / d_n)
 
-    z1_lower_bound = Z1_MEAN - SIGMA_MULTIPLIER * Z1_STD_DEV
-    z1_upper_bound = Z1_MEAN + SIGMA_MULTIPLIER * Z1_STD_DEV
-    z4_lower_bound = Z4_MEAN - SIGMA_MULTIPLIER * Z4_STD_DEV
-    z4_upper_bound = Z4_MEAN + SIGMA_MULTIPLIER * Z4_STD_DEV
+    # Use the rolling statistics passed from the main loop
+    z1_lower_bound = z1_mean - SIGMA_MULTIPLIER * z1_std
+    z1_upper_bound = z1_mean + SIGMA_MULTIPLIER * z1_std
+    z4_lower_bound = z4_mean - SIGMA_MULTIPLIER * z4_std
+    z4_upper_bound = z4_mean + SIGMA_MULTIPLIER * z4_std
 
     is_in_range = (z1_lower_bound <= z1 <= z1_upper_bound) and \
                   (z4_lower_bound <= z4 <= z4_upper_bound)
@@ -164,6 +159,14 @@ if __name__ == '__main__':
     skipped_tests = 0
     last_prime_n = 0
     last_prime_metrics = {}
+
+    # --- Rolling Statistics variables ---
+    WINDOW_SIZE = 1000
+    z1_history = deque(maxlen=WINDOW_SIZE)
+    z4_history = deque(maxlen=WINDOW_SIZE)
+    # Initial base stats for the beginning of the run
+    BASE_Z1_MEAN, BASE_Z1_STD_DEV = 0.49, 0.56
+    BASE_Z4_MEAN, BASE_Z4_STD_DEV = 2.22, 2.09
 
     # --- Stall Detector variables ---
     numbers_since_last_prime = 0
@@ -198,8 +201,25 @@ if __name__ == '__main__':
                     z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
                     z4 = z_curv_p * (z_vec_mag_p / gap)
 
-                    # Pass the candidate's metrics to the classifier
-                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4, metrics)
+                    # Update rolling statistics history
+                    if z1 != 0 or z4 != 0:
+                        z1_history.append(z1)
+                        z4_history.append(z4)
+
+                    # Use rolling stats if the window is full enough, otherwise use base stats
+                    if len(z1_history) > 50:
+                        current_z1_mean = np.mean(z1_history)
+                        current_z1_std = np.std(z1_history)
+                        current_z4_mean = np.mean(z4_history)
+                        current_z4_std = np.std(z4_history)
+                    else:
+                        current_z1_mean, current_z1_std = BASE_Z1_MEAN, BASE_Z1_STD_DEV
+                        current_z4_mean, current_z4_std = BASE_Z4_MEAN, BASE_Z4_STD_DEV
+
+                    # Pass the candidate's metrics and rolling stats to the classifier
+                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4, metrics,
+                                                                  current_z1_mean, current_z1_std,
+                                                                  current_z4_mean, current_z4_std)
             else:
                 prime_status = 1 if is_prime(candidate_number) else 0
                 skipped = False
