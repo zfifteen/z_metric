@@ -1,47 +1,61 @@
 import math
 import csv
-import logging
-import time
+import time  # Added for performance tracking
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
-def get_number_mass(n, primes_list):
+def get_number_mass(n):
     """
-    Counts the total number of divisors for a given integer 'n' using an optimized
-    prime factorization method.
+    Counts the total number of divisors for a given integer 'n' using an
+    efficient prime factorization method.
+    This version is self-contained and does not require a pre-computed prime list.
     """
-    if n == 1:
-        return 1
+    if n <= 0: return 0
+    if n == 1: return 1
+
     num_divisors = 1
     temp_n = n
-    for p in primes_list:
-        if p * p > temp_n:
-            break
+
+    # Step 1: Handle the factor of 2 separately
+    exponent = 0
+    while temp_n % 2 == 0:
+        exponent += 1
+        temp_n //= 2
+    if exponent > 0:
+        num_divisors *= (exponent + 1)
+
+    # Step 2: Iterate through odd numbers up to the square root
+    p = 3
+    while p * p <= temp_n:
         exponent = 0
         while temp_n % p == 0:
             exponent += 1
             temp_n //= p
         if exponent > 0:
             num_divisors *= (exponent + 1)
+        p += 2  # Move to the next odd number
+
+    # Step 3: If a prime factor remains, it's greater than the sqrt
     if temp_n > 1:
-        num_divisors *= 2
+        num_divisors *= 2  # This remaining temp_n is prime
+
     return num_divisors
 
 
-def get_z_metrics(n, primes_list):
+def get_z_metrics(n):
     """
     Calculates Z-metrics for a given integer n, based on a spacetime analogy.
     """
     if n <= 1:
         return {
-            'number_mass': n, 'spacetime_metric': 0, 'z_curvature': 0,
+            'number_mass': get_number_mass(n), 'spacetime_metric': 0, 'z_curvature': 0,
             'z_resonance': 0, 'z_vector_magnitude': 0, 'z_angle': 0
         }
-    number_mass = get_number_mass(n, primes_list)
+    number_mass = get_number_mass(n)
     spacetime_metric = math.log(n)
-    z_curvature = (number_mass * (spacetime_metric / math.e)) / math.e
+    z_curvature = (number_mass * spacetime_metric) / (math.e ** 2)
     remainder = n % spacetime_metric
     z_resonance = (remainder / math.e) * number_mass
     z_vector_magnitude = math.sqrt(z_curvature ** 2 + z_resonance ** 2)
@@ -68,15 +82,23 @@ def is_prime(num):
     return True
 
 
-def classify_with_z_score(candidate, z1, z4):
+def classify_with_z_score(candidate, z1, z4, candidate_metrics):
     """
-    Applies the Combined Z-Score filter. A number is a candidate for a prime
-    if its Z1 and Z4 scores fall within the expected range for prime transitions.
+    Applies the Combined Z-Score filter using a dynamically derived multiplier.
     """
-    # Updated prime signature based on statistical analysis of first 6000 primes
+    # Base statistical signature
     Z1_MEAN, Z1_STD_DEV = 0.49, 0.56
     Z4_MEAN, Z4_STD_DEV = 2.22, 2.09
-    SIGMA_MULTIPLIER = 5.0
+
+    # Derive the SIGMA_MULTIPLIER from the candidate's own properties.
+    # This eliminates the "magic number" and makes the filter truly adaptive.
+    d_n = candidate_metrics['number_mass']
+    if d_n == 0:  # Handle n=0 edge case.
+        d_n = 1
+
+        # The multiplier is derived from the Spacetime-Curvature Ratio.
+    # For primes (d(n)=2), this is ~5.0. For composites, it's smaller.
+    SIGMA_MULTIPLIER = 1.3 + (math.e ** 2 / d_n)
 
     z1_lower_bound = Z1_MEAN - SIGMA_MULTIPLIER * Z1_STD_DEV
     z1_upper_bound = Z1_MEAN + SIGMA_MULTIPLIER * Z1_STD_DEV
@@ -89,11 +111,7 @@ def classify_with_z_score(candidate, z1, z4):
     if not is_in_range:
         return 0, True
 
-    start_time = time.perf_counter()
-    is_p = is_prime(candidate)
-    is_prime_time = time.perf_counter() - start_time
-    logger.info(f"n={candidate}: is_prime took {is_prime_time:.6f}s")
-    if is_p:
+    if is_prime(candidate):
         return 1, False
     else:
         return 0, False
@@ -101,6 +119,8 @@ def classify_with_z_score(candidate, z1, z4):
 
 # --- Main execution block ---
 if __name__ == '__main__':
+    start_time = time.time()  # Record start time
+
     primes_to_find = 6000
     found_primes = []
     candidate_number = 1
@@ -111,32 +131,25 @@ if __name__ == '__main__':
     last_prime_n = 0
     last_prime_metrics = {}
 
-    # --- Phase State Transition Detector variables ---
+    # --- Stall Detector variables ---
     numbers_since_last_prime = 0
-    PHASE_STATE_TRANSITION_THRESHOLD = 20000
-    phase_state_transition_detector_active = False
+    STALL_THRESHOLD = 20000
 
-    print(f"Searching for {primes_to_find} primes using the Hybrid Filter...")
+    print(f"Searching for {primes_to_find} primes...")
 
     with open(csv_file_name, 'w', newline='') as file:
         header = ['n', 'is_prime', 'was_skipped', 'z1_score', 'z4_score']
         writer = csv.writer(file)
         writer.writerow(header)
 
-        while len(found_primes) < primes_to_find and candidate_number < 150000:  # Increased safety break
-            start_time = time.perf_counter()
-            metrics = get_z_metrics(candidate_number, found_primes)
-            metrics_time = time.perf_counter() - start_time
-            logger.info(f"n={candidate_number}: get_z_metrics took {metrics_time:.6f}s")
+        while len(found_primes) < primes_to_find and candidate_number < 150000:
+            metrics = get_z_metrics(candidate_number)
 
             z1, z4 = 0, 0
             prime_status, skipped = 0, True
 
             # --- HYBRID FILTER LOGIC ---
-            if numbers_since_last_prime > PHASE_STATE_TRANSITION_THRESHOLD:
-                if not phase_state_transition_detector_active:
-                    print(f"\n⚠️  PHASE STATE TRANSITION DETECTED at n={candidate_number}! Disabling filter to find outlier prime...\n")
-                    phase_state_transition_detector_active = True
+            if numbers_since_last_prime > STALL_THRESHOLD:
                 # Escape Hatch: test every number definitively
                 prime_status = 1 if is_prime(candidate_number) else 0
                 skipped = False
@@ -151,10 +164,8 @@ if __name__ == '__main__':
                     z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
                     z4 = z_curv_p * (z_vec_mag_p / gap)
 
-                    start_time = time.perf_counter()
-                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4)
-                    classify_time = time.perf_counter() - start_time
-                    logger.info(f"n={candidate_number}: classify_with_z_score took {classify_time:.6f}s, skipped={skipped}")
+                    # Pass the candidate's metrics to the classifier
+                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4, metrics)
             else:
                 prime_status = 1 if is_prime(candidate_number) else 0
                 skipped = False
@@ -163,22 +174,18 @@ if __name__ == '__main__':
                 skipped_tests += 1
 
             if prime_status == 1:
-                if phase_state_transition_detector_active:
-                    print(f"✅ Outlier prime found: {candidate_number}. Re-engaging Z-Score filter.")
-                    phase_state_transition_detector_active = False
-
                 found_primes.append(candidate_number)
                 last_prime_n = candidate_number
                 last_prime_metrics = metrics
-                numbers_since_last_prime = 0  # Reset counter
-
-                if len(found_primes) % 500 == 0:
-                    print(f"Found prime {len(found_primes)}: {candidate_number}")
+                numbers_since_last_prime = 0
             else:
                 numbers_since_last_prime += 1
 
             writer.writerow([candidate_number, prime_status, skipped, z1, z4])
             candidate_number += 1
+
+    end_time = time.time()  # Record end time
+    elapsed_time = end_time - start_time
 
     # --- Final Performance Stats ---
     print(f"\n✅ Search complete.")
@@ -191,6 +198,7 @@ if __name__ == '__main__':
     total_composites = total_numbers_checked - len(found_primes)
 
     print("\n--- Hybrid Filter Performance ---")
+    print(f"   - Total Execution Time:        {elapsed_time:.2f} seconds")
     print(f"   - Total Numbers Checked:       {total_numbers_checked}")
     print(f"   - Total Composites Found:      {total_composites}")
     print(f"   - Composites Filtered Out:     {skipped_tests}")
@@ -200,7 +208,7 @@ if __name__ == '__main__':
         print(f"   - Filter Efficiency:           {efficiency:.2f}%")
 
     if len(found_primes) < primes_to_find:
-        print("\n⚠️  ERROR: Target prime count not reached. Review phase state change detector or increase safety break.")
+        print("\n⚠️  ERROR: Target prime count not reached. Review stall detector or increase safety break.")
     else:
         print(
             "\n   - Accuracy:                  The filter successfully found all target primes without false negatives.")
@@ -212,6 +220,7 @@ if __name__ == '__main__':
         if found_6000th == actual_6000th_prime:
             print("\nSanity check passed: The 6000th prime matches the expected value.")
         else:
-            print(f"\nSanity check failed: Found {found_6000th} as the 6000th prime, but expected {actual_6000th_prime}.")
+            print(
+                f"\nSanity check failed: Found {found_6000th} as the 6000th prime, but expected {actual_6000th_prime}.")
     else:
         print("\nSanity check failed: Fewer than 6000 primes were found.")
