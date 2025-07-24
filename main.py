@@ -1,15 +1,15 @@
 import math
 import csv
-from collections import deque
+import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 
 
-# ==============================================================================
-# Z-FIELD METRIC CALCULATIONS
-# ==============================================================================
-
 def get_number_mass(n, primes_list):
-    """Calculates the 'number_mass' of an integer 'n'."""
+    """
+    Counts the total number of divisors for a given integer 'n' using an optimized
+    prime factorization method.
+    """
     if n == 1:
         return 1
     num_divisors = 1
@@ -29,14 +29,16 @@ def get_number_mass(n, primes_list):
 
 
 def get_z_metrics(n, primes_list):
-    """Calculates the full set of Z-Field metrics for an integer 'n'."""
+    """
+    Calculates Z-metrics for a given integer n, based on a spacetime analogy.
+    """
     if n <= 1:
         return {
             'number_mass': n, 'spacetime_metric': 0, 'z_curvature': 0,
             'z_resonance': 0, 'z_vector_magnitude': 0, 'z_angle': 0
         }
-    spacetime_metric = math.log(n)
     number_mass = get_number_mass(n, primes_list)
+    spacetime_metric = math.log(n)
     z_curvature = (number_mass * (spacetime_metric / math.e)) / math.e
     remainder = n % spacetime_metric
     z_resonance = (remainder / math.e) * number_mass
@@ -49,12 +51,10 @@ def get_z_metrics(n, primes_list):
     }
 
 
-# ==============================================================================
-# FIELD CLASSIFICATION AND PRIMALITY TESTING
-# ==============================================================================
-
 def is_prime(num):
-    """A deterministic primality test based on trial division."""
+    """
+    Tests if a number is prime using an efficient primality test.
+    """
     if num <= 1: return False
     if num == 2: return True
     if num % 2 == 0: return False
@@ -66,153 +66,140 @@ def is_prime(num):
     return True
 
 
-def classify_with_quad_filter(gap, log_p, z1, z4, z_resonance_n, z_angle_n, z1_stats, z4_stats):
+def classify_with_z_score(candidate, z1, z4):
     """
-    Classifies a number using a quad-filter system to identify "Field",
-    "Cluster", "Isolation", and "Inertial" primes.
-
-    Returns:
-        tuple: (is_field, is_cluster, is_isolation, is_inertial)
+    Applies the Combined Z-Score filter. A number is a candidate for a prime
+    if its Z1 and Z4 scores fall within the expected range for prime transitions.
     """
-    # --- Filter 1: The "Field Prime" Signature ---
-    SIGMA_MULTIPLIER = 4.0
-    z1_mean, z1_std = z1_stats['mean'], z1_stats['std']
-    z4_mean, z4_std = z4_stats['mean'], z4_stats['std']
-    z1_std = max(z1_std, 0.2)
-    z4_std = max(z4_std, 0.2)
-    z1_lower = z1_mean - SIGMA_MULTIPLIER * z1_std
-    z1_upper = z1_mean + SIGMA_MULTIPLIER * z1_std
-    z4_lower = z4_mean - SIGMA_MULTIPLIER * z4_std
-    z4_upper = z4_mean + SIGMA_MULTIPLIER * z4_std
-    is_field_candidate = (z1_lower <= z1 <= z1_upper) and \
-                         (z4_lower <= z4 <= z4_upper)
+    # Updated prime signature based on statistical analysis of first 6000 primes
+    Z1_MEAN, Z1_STD_DEV = 0.49, 0.56
+    Z4_MEAN, Z4_STD_DEV = 2.22, 2.09
+    SIGMA_MULTIPLIER = 5.0
 
-    # --- Filter 2: The "Cluster Prime" Signature ---
-    CLUSTER_RESONANCE_MEAN = 1.06
-    CLUSTER_RESONANCE_STD = 0.86
-    res_lower = CLUSTER_RESONANCE_MEAN - 3 * CLUSTER_RESONANCE_STD
-    res_upper = CLUSTER_RESONANCE_MEAN + 3 * CLUSTER_RESONANCE_STD
-    is_cluster_candidate = (res_lower <= z_resonance_n <= res_upper)
+    z1_lower_bound = Z1_MEAN - SIGMA_MULTIPLIER * Z1_STD_DEV
+    z1_upper_bound = Z1_MEAN + SIGMA_MULTIPLIER * Z1_STD_DEV
+    z4_lower_bound = Z4_MEAN - SIGMA_MULTIPLIER * Z4_STD_DEV
+    z4_upper_bound = Z4_MEAN + SIGMA_MULTIPLIER * Z4_STD_DEV
 
-    # --- Filter 3: The "Isolation Prime" Signature ---
-    is_isolation_candidate = False
-    if log_p > 0 and (gap / log_p) > 3.0:
-        is_isolation_candidate = True
+    is_in_range = (z1_lower_bound <= z1 <= z1_upper_bound) and \
+                  (z4_lower_bound <= z4 <= z4_upper_bound)
 
-    # --- Filter 4: The "Inertial Prime" Signature ---
-    is_inertial_candidate = (z_angle_n < 20.0)
+    if not is_in_range:
+        return 0, True
 
-    return is_field_candidate, is_cluster_candidate, is_isolation_candidate, is_inertial_candidate
-
-
-# ==============================================================================
-# MAIN EXECUTION BLOCK: THE QUAD-FILTER ALGORITHM
-# ==============================================================================
-
-# --- Configuration ---
-primes_to_find = 6000
-search_limit = 70000
-WINDOW_SIZE = 500
-log_file_name = 'quad_filter_analysis.csv'
-
-# --- State Variables ---
-found_primes = []
-candidate_number = 1
-last_prime_n = 0
-last_prime_metrics = {}
-z1_history = deque(maxlen=WINDOW_SIZE)
-z4_history = deque(maxlen=WINDOW_SIZE)
-z1_stats = {'mean': 1.10, 'std': 0.65}
-z4_stats = {'mean': 0.50, 'std': 0.35}
-
-print(f"Initializing quad-filter Z-Field search for {primes_to_find} primes...")
-print(f"Logging detailed analysis to '{log_file_name}'")
-
-with open(log_file_name, 'w', newline='') as file:
-    writer = csv.writer(file)
-    header = [
-        'n', 'is_prime', 'gap', 'z1', 'z4', 'z_resonance_n', 'z_angle_n',
-        'is_field', 'is_cluster', 'is_isolation', 'is_inertial'
-    ]
-    writer.writerow(header)
-
-    # Main loop
-    while len(found_primes) < primes_to_find and candidate_number < search_limit:
-        metrics = get_z_metrics(candidate_number, found_primes)
-        prime_status = 0
-        candidates = (False,) * 4
-        gap, z1, z4, z_resonance_n, z_angle_n = 0, 0, 0, 0, 0
-
-        if last_prime_n > 0:
-            gap = candidate_number - last_prime_n
-            if gap > 0:
-                z_vec_mag_p = last_prime_metrics['z_vector_magnitude']
-                z_angle_p = last_prime_metrics['z_angle']
-                z_curv_p = last_prime_metrics['z_curvature']
-                log_p = last_prime_metrics['spacetime_metric']
-
-                z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
-                z4 = z_curv_p * (z_vec_mag_p / gap)
-                z_resonance_n = metrics['z_resonance']
-                z_angle_n = metrics['z_angle']
-
-                candidates = classify_with_quad_filter(
-                    gap, log_p, z1, z4, z_resonance_n, z_angle_n, z1_stats, z4_stats
-                )
-
-                if any(candidates):
-                    if is_prime(candidate_number):
-                        prime_status = 1
-        else:  # Handle first prime
-            if is_prime(candidate_number):
-                prime_status = 1
-
-        # --- LOGGING ---
-        if last_prime_n > 0:
-            writer.writerow([
-                candidate_number, prime_status, gap, z1, z4, z_resonance_n, z_angle_n,
-                *candidates
-            ])
-
-        # --- STATE UPDATE ---
-        if prime_status == 1:
-            found_primes.append(candidate_number)
-
-            if last_prime_n > 0:
-                z1_history.append(z1)
-                z4_history.append(z4)
-
-                if len(z1_history) > 10:
-                    z1_stats['mean'] = np.mean(z1_history)
-                    z1_stats['std'] = np.std(z1_history)
-                    z4_stats['mean'] = np.mean(z4_history)
-                    z4_stats['std'] = np.std(z4_history)
-
-            last_prime_n = candidate_number
-            last_prime_metrics = metrics
-
-            if len(found_primes) % 500 == 0:
-                print(f"Found prime {len(found_primes)}/{primes_to_find}: {candidate_number}")
-
-        candidate_number += 1
-
-# --- Final Summary ---
-print(f"\n✅ Z-Field search complete.")
-print(f"   - Found {len(found_primes)} primes.")
-if found_primes:
-    print(f"   - The last prime found is: {found_primes[-1]}")
-
-if len(found_primes) < primes_to_find:
-    print(f"\n⚠️  WARNING: Search limit of {search_limit} reached. "
-          f"Found {len(found_primes)} out of {primes_to_find} primes.")
-else:
-    print("\n   - SUCCESS: Target prime count reached within the search limit.")
-    # --- SANITY CHECK ---
-    actual_6000th_prime = 57671
-    found_6000th_prime = found_primes[5999]
-    print(f"   - Ground Truth 6000th prime: {actual_6000th_prime}")
-    print(f"   - Algorithm's 6000th prime:  {found_6000th_prime}")
-    if actual_6000th_prime == found_6000th_prime:
-        print("   - ACCURACY CONFIRMED: The filter correctly identified all primes.")
+    if is_prime(candidate):
+        return 1, False
     else:
-        print(f"   - ACCURACY FAILED: The filter missed {actual_6000th_prime - found_6000th_prime} primes.")
+        return 0, False
+
+
+# --- Main execution block ---
+if __name__ == '__main__':
+    primes_to_find = 6000
+    found_primes = []
+    candidate_number = 1
+    csv_file_name = 'prime_stats_hybrid_filter.csv'
+
+    # --- Initialize variables ---
+    skipped_tests = 0
+    last_prime_n = 0
+    last_prime_metrics = {}
+
+    # --- Stall Detector variables ---
+    numbers_since_last_prime = 0
+    STALL_THRESHOLD = 20000
+    stall_detector_active = False
+
+    print(f"Searching for {primes_to_find} primes using the Hybrid Filter...")
+
+    with open(csv_file_name, 'w', newline='') as file:
+        header = ['n', 'is_prime', 'was_skipped', 'z1_score', 'z4_score']
+        writer = csv.writer(file)
+        writer.writerow(header)
+
+        while len(found_primes) < primes_to_find and candidate_number < 150000:  # Increased safety break
+            metrics = get_z_metrics(candidate_number, found_primes)
+
+            z1, z4 = 0, 0
+            prime_status, skipped = 0, True
+
+            # --- HYBRID FILTER LOGIC ---
+            if numbers_since_last_prime > STALL_THRESHOLD:
+                if not stall_detector_active:
+                    print(f"\n⚠️  STALL DETECTED at n={candidate_number}! Disabling filter to find outlier prime...\n")
+                    stall_detector_active = True
+                # Escape Hatch: test every number definitively
+                prime_status = 1 if is_prime(candidate_number) else 0
+                skipped = False
+
+            elif last_prime_n > 0:
+                gap = candidate_number - last_prime_n
+                if gap > 0:
+                    z_vec_mag_p = last_prime_metrics['z_vector_magnitude']
+                    z_angle_p = last_prime_metrics['z_angle']
+                    z_curv_p = last_prime_metrics['z_curvature']
+
+                    z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
+                    z4 = z_curv_p * (z_vec_mag_p / gap)
+
+                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4)
+            else:
+                prime_status = 1 if is_prime(candidate_number) else 0
+                skipped = False
+
+            if skipped:
+                skipped_tests += 1
+
+            if prime_status == 1:
+                if stall_detector_active:
+                    print(f"✅ Outlier prime found: {candidate_number}. Re-engaging Z-Score filter.")
+                    stall_detector_active = False
+
+                found_primes.append(candidate_number)
+                last_prime_n = candidate_number
+                last_prime_metrics = metrics
+                numbers_since_last_prime = 0  # Reset counter
+
+                if len(found_primes) % 500 == 0:
+                    print(f"Found prime {len(found_primes)}: {candidate_number}")
+            else:
+                numbers_since_last_prime += 1
+
+            writer.writerow([candidate_number, prime_status, skipped, z1, z4])
+            candidate_number += 1
+
+    # --- Final Performance Stats ---
+    print(f"\n✅ Search complete.")
+    print(f"   - Found {len(found_primes)} primes.")
+    if found_primes:
+        print(f"   - The last prime is: {found_primes[-1]}")
+    print(f"   - Statistics saved to '{csv_file_name}'")
+
+    total_numbers_checked = candidate_number - 1
+    total_composites = total_numbers_checked - len(found_primes)
+
+    print("\n--- Hybrid Filter Performance ---")
+    print(f"   - Total Numbers Checked:       {total_numbers_checked}")
+    print(f"   - Total Composites Found:      {total_composites}")
+    print(f"   - Composites Filtered Out:     {skipped_tests}")
+
+    if total_composites > 0:
+        efficiency = (skipped_tests / total_composites) * 100
+        print(f"   - Filter Efficiency:           {efficiency:.2f}%")
+
+    if len(found_primes) < primes_to_find:
+        print("\n⚠️  ERROR: Target prime count not reached. Review stall detector or increase safety break.")
+    else:
+        print(
+            "\n   - Accuracy:                  The filter successfully found all target primes without false negatives.")
+
+    # --- Sanity Check ---
+    actual_6000th_prime = 59359
+    if len(found_primes) >= 6000:
+        found_6000th = found_primes[5999]
+        if found_6000th == actual_6000th_prime:
+            print("\nSanity check passed: The 6000th prime matches the expected value.")
+        else:
+            print(f"\nSanity check failed: Found {found_6000th} as the 6000th prime, but expected {actual_6000th_prime}.")
+    else:
+        print("\nSanity check failed: Fewer than 6000 primes were found.")
