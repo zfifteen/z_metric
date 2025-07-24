@@ -1,11 +1,13 @@
 import math
 import csv
 import time  # Added for performance tracking
+from functools import lru_cache  # Added for memoization
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+@lru_cache(maxsize=None)  # Cache results of this expensive function
 def get_number_mass(n):
     """
     Counts the total number of divisors for a given integer 'n' using an
@@ -67,18 +69,50 @@ def get_z_metrics(n):
     }
 
 
-def is_prime(num):
+def is_prime(n):
     """
-    Tests if a number is prime using an efficient primality test.
+    Miller-Rabin primality test, made deterministic for the required range.
+    This is significantly faster than trial division for large numbers.
     """
-    if num <= 1: return False
-    if num == 2: return True
-    if num % 2 == 0: return False
-    i = 3
-    while i <= math.sqrt(num):
-        if num % i == 0:
+    if n < 2:
+        return False
+    if n == 2 or n == 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+
+    # Write n-1 as 2^r * d
+    d = n - 1
+    r = 0
+    while d % 2 == 0:
+        d //= 2
+        r += 1
+
+    # Use a set of bases that are deterministic for numbers up to a very high limit.
+    # For n < 3,317,044,064,279,37, these bases are sufficient.
+    # Our range is much smaller, so this is more than safe.
+    bases = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
+    if n < 341550071728321:
+        bases = [2, 3, 5, 7, 11, 13, 17]
+
+    for a in bases:
+        if a >= n:
+            break
+
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+
+        is_composite = True
+        for _ in range(r - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                is_composite = False
+                break
+
+        if is_composite:
             return False
-        i += 2
+
     return True
 
 
