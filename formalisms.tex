@@ -1,0 +1,152 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Z-Curvature Prime Detection and GR Triangle Formalism}
+\author{Your Name}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{1. Z-Curvature and Prime Filtering}
+
+Let \( n \in \mathbb{N} \), \( n > 1 \), and define:
+
+\begin{itemize}
+    \item \( d(n) \): number of positive divisors of \( n \)
+    \item \( \log(n) \): natural logarithm
+    \item \( e \): Euler’s number
+    \item \( \mathbb{P} \): set of prime numbers
+\end{itemize}
+
+\subsection*{1.1 Z-Curvature Function}
+
+\[
+Z_{\text{curv}}(n) := \frac{d(n) \cdot \log(n)}{e^2}
+\]
+
+\subsection*{1.2 Curvature Threshold}
+
+\[
+\Theta(n) := \max \left( 3.5,\ \max_{\substack{p \in \mathbb{P} \\ p < n}} Z_{\text{curv}}(p) \right)
+\]
+
+\subsection*{1.3 Z-Prime Filter}
+
+\[
+\mathcal{Z}_\text{prime}(n) := 
+\begin{cases}
+\text{True}, & \text{if } Z_{\text{curv}}(n) \leq \Theta(n) \\
+\text{False}, & \text{otherwise}
+\end{cases}
+\]
+
+\subsection*{1.4 Z-Based Prime Classifier}
+
+\[
+\text{IsPrime}_{\mathcal{Z}}(n) := 
+\begin{cases}
+\text{False}, & \text{if } Z_{\text{curv}}(n) > \Theta(n) \\
+\text{IsPrime}(n), & \text{otherwise}
+\end{cases}
+\]
+
+\section*{2. GR-Inspired Z-Triangles}
+
+For a given pair of successive primes \( p_k, p_{k+1} \), define:
+
+\begin{align*}
+    \Delta n &= p_{k+1} - p_k \\
+    \log_p &= \log(p_k) \\
+    g &= \frac{\Delta n}{\log_p} \quad \text{(normalized gap)} \\
+    C_k &= Z_{\text{curv}}(p_k) \\
+    R_k &= Z_{\text{res}}(p_k) := \left( \frac{p_k \bmod \log_p}{e} \right) \cdot d(p_k) \\
+    \theta_k &= \tan^{-1}\left( \frac{R_k}{C_k} \right) \quad \text{(Z-angle)} \\
+    \| \vec{Z}_k \| &= \sqrt{C_k^2 + R_k^2}
+\end{align*}
+
+---
+
+\subsection*{2.1 GR Triangle 1: Gravitational Lensing Analogue}
+
+This triangle models curvature, gap, and angular deviation.
+
+\[
+\boxed{
+\textbf{Triangle 1: } 
+\left\{
+\begin{aligned}
+A &= C_k \quad \text{(mass-induced curvature)} \\
+B &= g \quad \text{(path: normalized gap)} \\
+C &= \frac{\theta_k}{90^\circ} \quad \text{(bending)}
+\end{aligned}
+\right.
+}
+\]
+
+Interpretation: Mass bends space over a gap producing angular distortion.
+
+---
+
+\subsection*{2.2 GR Triangle 2: Metric Tensor Analogue}
+
+This triangle links raw prime gap with the Z-vector magnitude:
+
+\[
+\boxed{
+\textbf{Triangle 2: } 
+\left\{
+\begin{aligned}
+A &= \Delta n \quad \text{(gap)} \\
+B &= 1 \quad \text{(unit baseline)} \\
+C &= \| \vec{Z}_k \| \quad \text{(field vector)}
+\end{aligned}
+\right.
+}
+\]
+
+Interpretation: Magnitude of the Z-vector expresses metric field strength between primes.
+
+---
+
+\subsection*{2.3 GR Triangle 3: Frame-Dragging Analogue}
+
+This triangle captures the differential “drag” in the Z-field between two primes.
+
+Let:
+
+\[
+\begin{aligned}
+\Delta C &= |Z_{\text{curv}}(p_{k+1}) - Z_{\text{curv}}(p_k)| \\
+\Delta R &= |Z_{\text{res}}(p_{k+1}) - Z_{\text{res}}(p_k)| \\
+g &= \text{(normalized gap as above)}
+\end{aligned}
+\]
+
+Then:
+
+\[
+\boxed{
+\textbf{Triangle 3: } 
+\left\{
+\begin{aligned}
+A &= \Delta C \quad \text{(curvature change)} \\
+B &= \Delta R \quad \text{(resonance change)} \\
+C &= g \quad \text{(normalized gap)}
+\end{aligned}
+\right.
+}
+\]
+
+Interpretation: Frame-dragging is modeled as Z-field deviation between successive primes.
+
+---
+
+\section*{3. Ontological Notes}
+
+The set of primes \( \mathbb{P} \) may be viewed as low-curvature fixed points in a relativistic Z-field. The triangles formalize field geometry and detect rapid transitions in curvature and resonance across discrete time (\( n \)).
+
+\end{document}
