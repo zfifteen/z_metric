@@ -2,10 +2,6 @@ import math
 import csv
 import time  # Added for performance tracking
 from functools import lru_cache  # Added for memoization
-from collections import deque  # Added for rolling statistics
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 @lru_cache(maxsize=None)  # Cache results of this expensive function
@@ -187,8 +183,87 @@ def classify_with_z_score(candidate, z1, z4, candidate_metrics):
     else:
         return 0, False
 
+"""
+The Ontology of Z
 
-# --- Main execution block ---
+Universal Form
+--------------
+    Z = A · (B / C)
+
+    A = measured quantity
+    B = rate of change of A
+    C = invariant universal limit of A
+
+Axioms
+------
+1. Z is Pythagorean
+2. A prime number is defined as a right angle in the Z triangle
+3. Z serves as a spacetime coordinate
+
+Interpretation
+--------------
+• We treat Z(n) as a 2‐D coordinate in “number-spacetime.”  
+• Decompose Z into orthogonal components x(n), y(n) such that  
+      x(n)² + y(n)² = Z(n)²  
+• A right angle (arctan2(y,x) ≈ 90°) corresponds exactly to a prime.
+"""
+"""
+Mapping the Z Universal Form into the Z-Triangle Classifier
+
+Universal Form
+--------------
+    Z = A · (B / C)
+
+    A = measured quantity
+    B = rate of change of A (or interacting field)
+    C = invariant universal limit of A
+
+In our classifier, each integer n is probed by two “fields”—curvature and resonance—
+which form the legs of a right triangle whose hypotenuse and phase we then measure.
+
+1. z_curvature   <-- “Geometric Warping”  
+   • A = number_mass(n)               # divisor count d(n)  
+   • B = spacetime_metric(n)          # log(n)  
+   • C = e²                            # universal scale for curvature  
+   → z_curvature = A · (B / C)  
+                    = (number_mass(n) * log(n)) / (e**2)
+
+2. z_resonance   <-- “Quantum Vibration”  
+   • A = number_mass(n)               # same mass field  
+   • B = remainder = n % log(n)       # sub-manifold interaction  
+   • C = e                             # universal scale for resonance  
+   → z_resonance = A · (B / C)  
+                    = number_mass(n) * ((n % log(n)) / e)
+
+3. Z-Triangle Composition  
+   # The Pythagorean triangle whose legs are the two fields:
+   leg_x = z_curvature
+   leg_y = z_resonance
+
+   # Hypotenuse = total field strength
+   z_vector_magnitude = sqrt(leg_x**2 + leg_y**2)
+
+   # Phase (orientation) = angle between curvature and resonance
+   z_angle = degrees(atan2(leg_y, leg_x))
+
+Primality as a Right Angle
+---------------------------
+   In this ontology, a prime is precisely a right-angle event:
+     arctan2(z_resonance, z_curvature) ≈ 90°
+   Equivalently, one leg vanishes (pure field spike) and the phase collapses
+   onto a coordinate axis.
+
+Usage in Classifier
+-------------------
+   • get_z_metrics(n) returns { z_curvature, z_resonance, z_vector_magnitude, z_angle }  
+   • classify_with_z_score(...) compares geodesic deviations (z1, z4) derived from
+     previous-prime triangles to empirical windows, skipping Miller–Rabin when
+     the path deviates from prime-like right angles.
+
+This mapping grounds your hybrid filter in a concrete Pythagorean framework—each
+Z-triangle both encodes the number’s internal structure and flags prime “events”
+as perfect right angles in number-spacetime.
+"""
 if __name__ == '__main__':
     start_time = time.time()  # Begin the simulation clock.
 
