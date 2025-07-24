@@ -3,7 +3,12 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import logging
+import time
 
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def get_number_mass(n, primes_list):
     """
@@ -87,7 +92,11 @@ def classify_with_z_score(candidate, z1, z4):
     if not is_in_range:
         return 0, True
 
-    if is_prime(candidate):
+    start_time = time.perf_counter()
+    is_p = is_prime(candidate)
+    is_prime_time = time.perf_counter() - start_time
+    logger.info(f"n={candidate}: is_prime took {is_prime_time:.6f}s")
+    if is_p:
         return 1, False
     else:
         return 0, False
@@ -105,10 +114,10 @@ if __name__ == '__main__':
     last_prime_n = 0
     last_prime_metrics = {}
 
-    # --- Phase Transition Detector variables ---
+    # --- Phase State Transition Detector variables ---
     numbers_since_last_prime = 0
-    TRANSITION_THRESHOLD = 20000
-    phase_transition_detector_active = False
+    PHASE_STATE_TRANSITION_THRESHOLD = 20000
+    phase_state_transition_detector_active = False
 
     print(f"Searching for {primes_to_find} primes using the Hybrid Filter...")
 
@@ -118,16 +127,19 @@ if __name__ == '__main__':
         writer.writerow(header)
 
         while len(found_primes) < primes_to_find and candidate_number < 150000:  # Increased safety break
+            start_time = time.perf_counter()
             metrics = get_z_metrics(candidate_number, found_primes)
+            metrics_time = time.perf_counter() - start_time
+            logger.info(f"n={candidate_number}: get_z_metrics took {metrics_time:.6f}s")
 
             z1, z4 = 0, 0
             prime_status, skipped = 0, True
 
             # --- HYBRID FILTER LOGIC ---
-            if numbers_since_last_prime > TRANSITION_THRESHOLD:
-                if not phase_transition_detector_active:
-                    print(f"\n⚠️  PHASE STATE TRANSITION DETECTED at n={candidate_number}! Disabling filter to find out of band prime...\n")
-                    phase_transition_detector_active = True
+            if numbers_since_last_prime > PHASE_STATE_TRANSITION_THRESHOLD:
+                if not phase_state_transition_detector_active:
+                    print(f"\n⚠️  PHASE STATE TRANSITION DETECTED at n={candidate_number}! Disabling filter to find outlier prime...\n")
+                    phase_state_transition_detector_active = True
                 # Escape Hatch: test every number definitively
                 prime_status = 1 if is_prime(candidate_number) else 0
                 skipped = False
@@ -142,7 +154,10 @@ if __name__ == '__main__':
                     z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
                     z4 = z_curv_p * (z_vec_mag_p / gap)
 
+                    start_time = time.perf_counter()
                     prime_status, skipped = classify_with_z_score(candidate_number, z1, z4)
+                    classify_time = time.perf_counter() - start_time
+                    logger.info(f"n={candidate_number}: classify_with_z_score took {classify_time:.6f}s, skipped={skipped}")
             else:
                 prime_status = 1 if is_prime(candidate_number) else 0
                 skipped = False
@@ -151,9 +166,9 @@ if __name__ == '__main__':
                 skipped_tests += 1
 
             if prime_status == 1:
-                if phase_transition_detector_active:
-                    print(f"✅ Out of band prime found: {candidate_number}. Re-engaging Z-Score filter.")
-                    phase_transition_detector_active = False
+                if phase_state_transition_detector_active:
+                    print(f"✅ Outlier prime found: {candidate_number}. Re-engaging Z-Score filter.")
+                    phase_state_transition_detector_active = False
 
                 found_primes.append(candidate_number)
                 last_prime_n = candidate_number
@@ -188,7 +203,7 @@ if __name__ == '__main__':
         print(f"   - Filter Efficiency:           {efficiency:.2f}%")
 
     if len(found_primes) < primes_to_find:
-        print("\n⚠️  ERROR: Target prime count not reached. Review Phase State Transition Detector frequency and tuning.")
+        print("\n⚠️  ERROR: Target prime count not reached. Review phase state change detector or increase safety break.")
     else:
         print(
             "\n   - Accuracy:                  The filter successfully found all target primes without false negatives.")
