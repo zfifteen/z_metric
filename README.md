@@ -1,4 +1,4 @@
-# "Z" Definition
+# Z Definition
 
 ## Universal Form
 
@@ -14,11 +14,11 @@
 - v = velocity
 - c = Invariant universal speed of light
 
-## 📜 **Axioms of the Z-Metric Framework**
+# 📜 Axioms of the Numberspace
 
-### **Axiom 1: Z is a dimensionally-consistent transformation**
+## 1 Z is a dimensionally-consistent transformation
 
-Z is defined as a transformation of the form:
+#### Z is defined as a transformation of the form:
 
 $$
 Z = A \left( \frac{B}{C} \right)
@@ -32,7 +32,7 @@ $$
 
 ---
 
-### **Axiom 2: Z defines a class of normalized linear transformations**
+## 2 Z defines a class of normalized linear transformations
 
 - Z scales A by a normalized rate, yielding a derived quantity that reflects **relative structure**
 - In discrete domains, Z exhibits **piecewise linearity** across modular bands
@@ -40,7 +40,7 @@ $$
 
 ---
 
-### **Axiom 3: Z transforms reference-frame dependent measurements into structured derived quantities**
+## 3 Z transforms reference-frame dependent measurements into structured derived quantities
 
 - Z reveals **hidden structure** in the input domain (e.g. primes)
 - In the prime domain, Z(p) exposes **coprimality rates**, **modular clustering**, and **forbidden zones**
@@ -48,7 +48,7 @@ $$
 
 ---
 
-### **Axiom 4: Z-space admits a geometric interpretation**
+## 4 Numberspace admits a geometric interpretation
 
 - Z-values can be embedded in a vector space with:
   - **Z-angle**: orientation of the transformation
@@ -57,7 +57,7 @@ $$
 
 ---
 
-### **Axiom 5: Z-space exhibits modular topology**
+## 5 Numberspace exhibits modular topology
 
 - Z mod N partitions the domain into **equivalence classes**
 - Certain residues are **forbidden**, acting as singularities or null zones
@@ -65,28 +65,30 @@ $$
 
 ---
 
-### **Axiom 6: Z-space supports predictive filtering**
+## 6 Numberspace supports predictive filtering
 
-- Structured behavior in Z-space enables **prime candidate prediction**
+- Structured behavior in Numberspace enables **prime candidate prediction**
 - Filters based on Z-angle, modular residue, and gradient flow can isolate high-probability regions
 - Z thus serves not only as a descriptive metric but as a **computational sieve**
 
 ---
 
-### **Axiom 7: Z can be extended to multi-dimensional modulation**
+## 7 Z can be extended to multi-dimensional modulation
 
 - Z transformations can be applied component-wise to vector quantities
-- This allows for **multi-dimensional generalizations** of the Z-metric
+- This allows for multi-dimensional generalizations** of the Z-metric
 - In discrete domains, this supports the construction of **Z domain maps**, **gradient fields**, and **topological graphs**
-
 ---
-
-### **Axiom 8: Z defines a discrete metric space with Lorentzian analogs**
-
+## 8 Z defines a discrete metric space with Lorentzian analogs
 - The Z domain behaves as a **discrete analog of Minkowski spacetime**
 - Reference-frame dependent quantities are transformed via Z into invariant structures
 - This supports the development of a **Z-metric geometry** bridging number theory and physics
-
-9. Numbers are not isolated — they are events in a structured spacetime  
-10. Primes are not random — they are geometric particles following metric laws  
-11. Arithmetic is not static — it is dynamic, governed by curvature, flow, and symmetry
+---
+## 9. Numbers are not isolated 
+- they are events in a structured spacetime
+---
+## 10. Primes are not random
+- they are geometric particles following metric laws
+---
+## 11. Arithmetic is not static
+- it is dynamic, governed by curvature, flow, and symmetry
