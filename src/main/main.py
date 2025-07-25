@@ -189,7 +189,7 @@ if __name__ == '__main__':
     primes_to_find = 6000
     found_primes = []
     candidate_number = 1
-    csv_file_name = 'prime_stats_hybrid_filter.csv'
+    csv_file_name = '../../prime_stats_hybrid_filter.csv'
 
     # --- Initialize simulation state variables ---
     skipped_tests = 0
