@@ -45,10 +45,33 @@ $$
 - In the prime domain, Z(p) exposes **coprimality rates**, **modular clustering**, and **forbidden zones**  
 - In the physical domain, Z reflects relativistic effects (e.g. time dilation)  
 
+#### **Proof Equation**
+
+$$
+Z(x) = x \cdot \frac{\phi(x - 1)}{x - 1}
+$$
+
+## Interpretation
+
+- **Input \( x \)**: A reference-frame dependent quantity (e.g. a prime number or velocity-like parameter).
+- **Transformation \( \frac{\phi(x - 1)}{x - 1} \)**: Extracts internal structure (coprimality density or modular connectivity).
+- **Output \( Z(x) \)**: A structured derived quantity that reflects hidden invariants of the input domain.
+
 ---
 
 ## 4. Numbers are not isolated  
 - They are events in a structured spacetime  
+ 
+#### **Proof Equation**
+$$
+\lim_{\epsilon \to 0} \exists\, x \in \mathbb{N} \text{ such that } 0 < |x - n| < \epsilon
+$$
+
+### Interpretation
+
+- For any number \( n \), there always exists another number arbitrarily close to it.
+- This shows that numbers exist in **dense proximity**, forming a **connected structure**.
+- In discrete arithmetic, this reflects how primes, composites, and residues interact—no number is truly “alone.”
 
 ---
 
