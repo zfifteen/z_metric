@@ -50,3 +50,31 @@ You will see a summary of the filter's performance printed to the console, and a
 - T = reference frame–dependent measured quantity  
 - v = velocity  
 - c = Invariant universal speed of light  
+
+### **Axiom I: The Axiom of Domain Curvature**
+
+This axiom establishes the fundamental principle of the Z-Metric framework, defining the relationship between an entity's intrinsic complexity and the structure of the domain it inhabits.
+
+#### **1\. Definitions**
+
+Let D be a discrete, ordered domain, such as the set of positive integers Z+.  
+For any entity n∈D:
+
+* Let d(n):D→R be the **Mass Function**, a measure of the intrinsic complexity or structure of n. For D=Z+, this is defined as the divisor function, σ0​(n).  
+* Let λ(n):D→R be the **Spacetime Metric Function**, a measure of the local scale or magnitude of the domain at the position of n. For D=Z+, this is defined as the natural logarithm, ln(n).  
+* Let Zκ​(n):D→R be the **Curvature Function**, a measure of the local distortion, or curvature, of the domain D induced by the entity n.
+
+#### **2\. Axiomatic Statement**
+
+The local curvature induced by an entity within its domain is directly proportional to the product of the entity's intrinsic mass and the local spacetime metric.  
+This is expressed as:  
+Zκ​(n)∝d(n)⋅λ(n)
+
+#### **3\. Specific Formulation for the Domain of Integers (Z+)**
+
+Within the Z-Metric framework as implemented, the constant of proportionality is defined as 1/e2, where e is Euler's number. The axiom is thus formulated as the precise equation:  
+Zκ​(n)=e2d(n)⋅ln(n)​
+
+#### **4\. Corollary: The Principle of Minimal Curvature**
+
+A direct consequence of this axiom is that entities with minimal intrinsic mass induce minimal curvature in the domain. For the domain of integers, prime numbers (p) have a minimal non-trivial mass of d(p)=2. Therefore, primes represent points of minimal, stable curvature, acting as the fundamental geodesics of the Numberspace.
