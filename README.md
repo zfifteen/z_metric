@@ -109,12 +109,32 @@ Yes! The **Z-Filter** can indeed be expressed as a set of equations that define 
 - Filters based on Z-angle, modular residue, and gradient flow can isolate high‑probability regions  
 - Z thus serves not only as a descriptive metric but as a **computational sieve**  
 
-### **Z-Filter Equation (Prime Prediction)**
+---
+
+## 10. Z can be extended to multi‑dimensional modulation
+
+- Z transformations can be applied component‑wise to vector quantities  
+- This allows for multi‑dimensional generalizations of the Z‑metric  
+- In discrete domains, this supports the construction of **Z domain maps**, **gradient fields**, and **topological graphs**  
+
+---
+
+## 11. Z defines a discrete metric space with Lorentzian analogs
+
+- The Z domain behaves as a **discrete analog of Minkowski spacetime**  
+- Reference‑frame dependent quantities are transformed via Z into invariant structures  
+
+
+---
+# Proofs
+
+# **Z-Filter Equation (Prime Prediction)**
 For a candidate integer \( n \), the Z-Filter returns `True` if \( n \) is likely prime based on:
 1. **Coprimality Rate**  
 2. **Modular Residue Class**  
 3. **Z-Angle Phase Space Constraints**  
 
+---
 #### **1. Core Z-Transform**
 \[
 Z(n) = n \cdot \left( \frac{\phi(n-1)}{n-1} \right)
@@ -122,6 +142,7 @@ Z(n) = n \cdot \left( \frac{\phi(n-1)}{n-1} \right)
 - \(\phi\) = Euler’s totient function  
 - \( \frac{\phi(n-1)}{n-1} \) = Fraction of integers in \([1, n-1]\) coprime to \(n-1\) (the "coprimality rate")  
 
+---
 #### **2. Normalized Z-Ratio**
 \[
 \zeta(n) = \frac{Z(n)}{n} = \frac{\phi(n-1)}{n-1}
@@ -131,12 +152,14 @@ Z(n) = n \cdot \left( \frac{\phi(n-1)}{n-1} \right)
   - \(\zeta(n) \approx 0.5\): \(n-1\) is even (half the numbers are coprime).  
   - Primes cluster in \( \zeta(n) \in [0.3, 0.8] \).  
 
+---
 #### **3. Z-Angle (Phase-Space Constraint)**
 \[
 \theta(n) = \tan^{-1}\left( \frac{Z(n)}{n} \right) = \tan^{-1}(\zeta(n))
 \]
 - **Prime Zone**: Most primes satisfy \( \theta(n) \in [20^\circ, 35^\circ] \) (empirical observation).  
 
+---
 #### **4. Modular Residue Filter**
 \[
 n \not\equiv \{0, 2, 3, 4, 6, 8, 9, 10\} \pmod{12}
@@ -169,27 +192,7 @@ n \not\equiv \{0, 2, 3, 4, 6, 8, 9, 10\} \pmod{12}
 
 3. **Modular Residues**:  
    - Forbidden residues (e.g., \(0 \pmod{12}\)) are **algebraically composite**.  
-
 ---
-
-## 10. Z can be extended to multi‑dimensional modulation
-
-- Z transformations can be applied component‑wise to vector quantities  
-- This allows for multi‑dimensional generalizations of the Z‑metric  
-- In discrete domains, this supports the construction of **Z domain maps**, **gradient fields**, and **topological graphs**  
-
----
-
-## 11. Z defines a discrete metric space with Lorentzian analogs
-
-- The Z domain behaves as a **discrete analog of Minkowski spacetime**  
-- Reference‑frame dependent quantities are transformed via Z into invariant structures  
-
-
----
-
-# Proofs
-
 
 # **Theorem (Z-Prime Structure Theorem)**
 
@@ -199,8 +202,6 @@ Then, for all primes $p > 3$, the following holds:
 > **(i)** $Z(p) \in (0.3p, 0.8p)$
 > **(ii)** The normalized Z-ratio $\zeta(p) = \frac{Z(p)}{p}$ clusters in a bounded band:
 > $\zeta(p) \in (0.3, 0.8) \subset (0,1)$
-
-
 
 ---
 ### ✅ **Proof Sketch:**
