@@ -80,4 +80,8 @@ Z = A \left( \frac{B}{C} \right)
 - Reference-frame dependent quantities are transformed via Z into invariant structures
 - This supports the development of a **Z-metric geometry** bridging number theory and physics
 
+9 Numbers are not isolated — they are events in a structured spacetime
+10 Primes are not random — they are geometric particles following metric laws
+11 Arithmetic is not static — it is dynamic, governed by curvature, flow, and symmetry
+
 """

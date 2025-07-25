@@ -123,8 +123,23 @@ def filter_prime_candidates(points, allowed_residues={3, 7, 11, 13, 17}, angle_t
 # -----------------------------------
 
 if __name__ == "__main__":
-    z_points = generate_z_points(start=5, end=1000000, modulus=20)
+    # Generate exactly the first 6000 primes
+    primes = list(primerange(2, 600000))  # Overshoot to ensure coverage
+    target_primes = primes[:6000]
+    z_points = [PrimeZPoint(p, modulus=20) for p in target_primes]
 
+    # ✅ Sanity check: 6000th prime should be 59359
+    expected = 59359
+    actual = target_primes[-1]
+    print(f"\n✅ Search complete.")
+    print(f"   - Found {len(target_primes)} primes.")
+    print(f"   - The last prime is: {actual}")
+    if actual == expected:
+        print(f"   - Sanity check passed: The 6000th prime matches the expected value.")
+    else:
+        print(f"   ❌ Sanity check failed: Expected {expected}, but got {actual}")
+
+    # Continue with analysis
     plot_z_vs_p(z_points)
     plot_angle_vs_magnitude(z_points)
     plot_gradients(z_points)
@@ -132,5 +147,5 @@ if __name__ == "__main__":
     export_remainder_stats(z_points)
 
     candidates = filter_prime_candidates(z_points)
-    print("🔮 Predicted Prime Candidates (Filtered by Z-space):")
+    print("\n🔮 Predicted Prime Candidates (Filtered by Z-space):")
     print(candidates)
