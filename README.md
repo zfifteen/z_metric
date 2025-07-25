@@ -1,131 +1,92 @@
-# 🧭 Z-Metric: A Relativistic Temporal Classifier on the Integer Manifold
+# "Z" Definition
 
-This repository presents a novel framework for prime classification by reinterpreting the number line as a discrete spacetime lattice. The core construct, termed the **Z-metric**, defines a relativistic distance function over integers based on their prime factorizations. This metric is not merely a mathematical abstraction—it functions as a **temporal transformer**, correcting for arithmetic curvature in a manner analogous to time dilation in Minkowski spacetime.
+## Universal Form
 
-The classifier implemented here navigates this curved integer manifold deterministically, identifying prime numbers by tracing geodesic-like paths through a structured metric space. It avoids explicit factorization by leveraging the intrinsic geometry of the number line, treating it as a four-dimensional spacetime construct with embedded curvature.
+- Z = A(B/C)
+- A = reference frame dependent measured quantity
+- B = Rate
+- C = Invariant universal limit of B
 
----
+## Physical Domain
 
-## 📐 Conceptual Foundations
+- Z = T(v/c)
+- T = reference frame dependent measured quantity
+- v = velocity
+- c = Invariant universal speed of light
 
-In classical number theory, the number line is treated as a flat, one-dimensional structure. This project reimagines it as a **discrete manifold** endowed with a non-Euclidean metric derived from prime decomposition. Each integer is a point in a curved space, where the curvature reflects its multiplicative complexity.
+## 📜 **Axioms of the Z-Metric Framework**
 
-The **Z-metric** is defined as:
+### **Axiom 1: Z is a dimensionally-consistent transformation**
 
-\[
-Z = A\left(\frac{B}{C}\right)
-\]
+Z is defined as a transformation of the form:
 
-This formulation maps directly onto the relativistic time transformation:
+$$
+Z = A \left( \frac{B}{C} \right)
+$$
 
-\[
-Z = T\left(\frac{v}{c}\right)
-\]
-
-Where:
-- \( A \) is a scaling factor
-- \( B/C \) represents structural distortion due to factor density
-- \( T(v/c) \) is the Lorentzian time dilation factor from special relativity
-
-Thus, the Z-metric serves as a **temporal correction operator**, normalizing integer behavior relative to a fixed computational frame—analogous to how relativistic observers reconcile proper time and coordinate time.
-
----
-
-## 🧪 Computational Implementation
-
-The classifier operates deterministically, applying the Z-metric to traverse the integer manifold and isolate prime numbers. It performs the following:
-
-- Constructs a Z-metric space over integers up to a specified bound
-- Applies a hybrid filtering algorithm that avoids explicit factorization
-- Validates accuracy and performance against known prime distributions
-
-### ✅ Sample Output
-
-```
-Searching for 6000 primes...
-
-✅ Search complete.
-   - Found 6000 primes.
-   - The last prime is: 59359
-   - Statistics saved to 'prime_stats_hybrid_filter.csv'
-
---- Hybrid Filter Performance ---
-   - Total Execution Time:        0.35 seconds
-   - Total Numbers Checked:       59359
-   - Total Composites Found:      53359
-   - Composites Filtered Out:     8525
-   - Filter Efficiency:           15.98%
-
-   - Accuracy:                    The filter successfully found all target primes without false negatives.
-
-Sanity check passed: The 6000th prime matches the expected value.
-```
+- **A** is a reference-frame dependent quantity
+- **B** is a rate or frequency-like measure
+- **C** is an invariant upper bound on B
+- The ratio \( \frac{B}{C} \) is dimensionless, preserving the dimensionality of A
+- This form applies across domains, including physical (e.g. \( Z = T(v/c) \)) and arithmetic (e.g. \( Z(p) = p \cdot \frac{\phi(p-1)}{p-1} \))
 
 ---
 
-## 🧭 Physical Interpretation
+### **Axiom 2: Z defines a class of normalized linear transformations**
 
-The classifier navigates a **spacetime-like lattice** of integers, where:
-
-- **Primes** behave as inertial reference points—minimal curvature, geodesically isolated
-- **Composites** exhibit gravitational distortion—metric deviation due to factor density
-- **Filtering** corresponds to identifying geodesic paths that avoid curvature anomalies
-
-This analogy is functional: the classifier succeeds precisely because it treats the number line as a relativistic manifold, where metric structure governs traversal and classification.
+- Z scales A by a normalized rate, yielding a derived quantity that reflects **relative structure**
+- In discrete domains, Z exhibits **piecewise linearity** across modular bands
+- Z behaves predictably under modular constraints and rate normalization
 
 ---
 
-## 📊 Mathematical and Physical Significance
+### **Axiom 3: Z transforms reference-frame dependent measurements into structured derived quantities**
 
-| Domain              | Implications                                                                 |
-|---------------------|------------------------------------------------------------------------------|
-| **Number Theory**   | Introduces a metric-based topology over integers; novel classification of primes |
-| **Computational Physics** | Demonstrates metric filtering analogous to geodesic motion in curved discrete space |
-| **Cryptography**    | Offers efficient prime detection for secure key generation                   |
-| **Mathematical Physics** | Bridges discrete mathematics with relativistic geometry and metric theory |
+- Z reveals **hidden structure** in the input domain (e.g. primes)
+- In the prime domain, Z(p) exposes **coprimality rates**, **modular clustering**, and **forbidden zones**
+- In the physical domain, Z reflects relativistic effects (e.g. time dilation)
 
 ---
 
-## 🛠️ Usage
+### **Axiom 4: Z-space admits a geometric interpretation**
 
-To execute the prime search and filtering algorithm:
-
-```bash
-python main.py
-```
-
-Results are saved to `prime_stats_hybrid_filter.csv` for further analysis.
+- Z-values can be embedded in a vector space with:
+  - **Z-angle**: orientation of the transformation
+  - **Z-magnitude**: strength or reach of the transformation
+- This defines a **phase-like space** where discrete entities (e.g. primes) follow structured trajectories
 
 ---
 
-## 📁 Repository Structure
+### **Axiom 5: Z-space exhibits modular topology**
 
-- `main.py` — Primary execution script  
-- `z_metric.py` — Definition of the Z-metric and filtering logic  
-- `prime_stats_hybrid_filter.csv` — Output statistics from the filtering process  
-
----
-
-## 🔭 Future Directions
-
-This framework opens several avenues for exploration:
-
-- Formalizing the Z-metric as a discrete analog of Lorentzian geometry
-- Extending the manifold to include negative integers or algebraic structures
-- Visualizing curvature and geodesics in the integer space
-- Benchmarking against classical sieves and probabilistic primality tests
-- Publishing a theoretical paper on metric spaces over discrete sets
+- Z mod N partitions the domain into **equivalence classes**
+- Certain residues are **forbidden**, acting as singularities or null zones
+- Modular banding reveals **quantized behavior**, akin to spectral lines in physics
 
 ---
 
-## 👤 Author
+### **Axiom 6: Z-space supports predictive filtering**
 
-Developed by Dionisio ([@zfifteen](https://github.com/zfifteen)), with interests in mathematical physics, computational number theory, and geometric abstraction.
+- Structured behavior in Z-space enables **prime candidate prediction**
+- Filters based on Z-angle, modular residue, and gradient flow can isolate high-probability regions
+- Z thus serves not only as a descriptive metric but as a **computational sieve**
 
 ---
 
-## 📜 License
+### **Axiom 7: Z can be extended to multi-dimensional modulation**
 
-This project is released under the [MIT License](LICENSE).
+- Z transformations can be applied component-wise to vector quantities
+- This allows for **multi-dimensional generalizations** of the Z-metric
+- In discrete domains, this supports the construction of **Z domain maps**, **gradient fields**, and **topological graphs**
 
+---
 
+### **Axiom 8: Z defines a discrete metric space with Lorentzian analogs**
+
+- The Z domain behaves as a **discrete analog of Minkowski spacetime**
+- Reference-frame dependent quantities are transformed via Z into invariant structures
+- This supports the development of a **Z-metric geometry** bridging number theory and physics
+
+9. Numbers are not isolated — they are events in a structured spacetime  
+10. Primes are not random — they are geometric particles following metric laws  
+11. Arithmetic is not static — it is dynamic, governed by curvature, flow, and symmetry
