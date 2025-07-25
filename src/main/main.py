@@ -183,32 +183,51 @@ def classify_with_z_score(candidate, z1, z4, candidate_metrics):
     else:
         return 0, False
 
+
 if __name__ == '__main__':
     start_time = time.time()  # Begin the simulation clock.
 
     primes_to_find = 6000
     found_primes = []
     candidate_number = 1
-    csv_file_name = '../../prime_stats_hybrid_filter.csv'
+
+    # Define file paths
+    csv_file_name = 'prime_stats_hybrid_filter.csv'
+    trajectory_csv_file_name = 'prime_trajectory_stats.csv'
 
     # --- Initialize simulation state variables ---
     skipped_tests = 0
-    last_prime_n = 0  # The coordinate of the last stable state (prime).
-    last_prime_metrics = {}  # The full state vector of the last prime.
+
+    # --- NEW: State variables for trajectory analysis ---
+    # We now store a history of primes and their metrics to analyze trajectories.
+    # Each element is a dict: {'n': prime_number, 'metrics': z_metrics_dict}
+    prime_history = []
 
     # --- Phase State Transition Protocol ---
-    # If we travel too far from a stable state (a prime), we risk crossing a
-    # "phase boundary" into a chaotic region where the Z-filter is unreliable.
-    # This protocol acts as a fail-safe, ensuring we can navigate these "voids".
     distance_from_last_stable_state = 0
     PHASE_BOUNDARY_THRESHOLD = 20000
 
     print(f"Searching for {primes_to_find} primes...")
+    print(f"Trajectory analysis will be saved to '{trajectory_csv_file_name}'")
 
-    with open(csv_file_name, 'w', newline='') as file:
+    # Open both CSV files for writing
+    with open(csv_file_name, 'w', newline='') as file, \
+            open(trajectory_csv_file_name, 'w', newline='') as trajectory_file:
+
+        # Setup for the original CSV
         header = ['n', 'is_prime', 'was_skipped', 'z1_score', 'z4_score']
         writer = csv.writer(file)
         writer.writerow(header)
+
+        # --- NEW: Setup for the trajectory CSV ---
+        trajectory_header = [
+            'prime_n', 'prime_n-1', 'prime_n-2',
+            'gap_n', 'gap_n-1', 'gap_ratio',
+            'z_vec_mag_ratio', 'z_curvature_ratio', 'z_angle_diff',
+            'z_triangle_area', 'Z_trajectory_score'
+        ]
+        trajectory_writer = csv.writer(trajectory_file)
+        trajectory_writer.writerow(trajectory_header)
 
         # The main simulation loop: a "geodesic walk" along the number line.
         while len(found_primes) < primes_to_find and candidate_number < 150000:
@@ -218,15 +237,18 @@ if __name__ == '__main__':
             z1, z4 = 0, 0
             prime_status, skipped = 0, True
 
+            # Use the last prime from history for the original filter
+            last_prime_info = prime_history[-1] if prime_history else None
+
             # --- HYBRID FILTER LOGIC ---
             if distance_from_last_stable_state > PHASE_BOUNDARY_THRESHOLD:
                 # Phase boundary crossed: The Z-filter is disengaged.
-                # We now rely on the Oracle for deterministic checks to find the next stable state.
                 prime_status = 1 if is_prime(candidate_number) else 0
                 skipped = False
-
-            elif last_prime_n > 0:
+            elif last_prime_info:
                 # Calculate the properties of the transition from the last prime.
+                last_prime_n = last_prime_info['n']
+                last_prime_metrics = last_prime_info['metrics']
                 gap = candidate_number - last_prime_n
                 if gap > 0:
                     z_vec_mag_p = last_prime_metrics['z_vector_magnitude']
@@ -234,11 +256,9 @@ if __name__ == '__main__':
                     z_curv_p = last_prime_metrics['z_curvature']
 
                     # z1 and z4 measure the "geodesic deviation" or "tidal forces"
-                    # experienced during the transition between the last prime and the candidate.
                     z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
                     z4 = z_curv_p * (z_vec_mag_p / gap)
 
-                    # Use the observer to classify this transition path.
                     prime_status, skipped = classify_with_z_score(candidate_number, z1, z4, metrics)
             else:
                 # Initial state check for the first few numbers.
@@ -249,16 +269,60 @@ if __name__ == '__main__':
                 skipped_tests += 1
 
             if prime_status == 1:
-                # A stable state (prime) has been confirmed.
-                # Update our position and state vector to this new point.
                 found_primes.append(candidate_number)
-                last_prime_n = candidate_number
-                last_prime_metrics = metrics
+
+                # --- NEW: Trajectory Analysis Logic ---
+                # We need at least two previous primes to form a Z-triangle.
+                if len(prime_history) >= 2:
+                    # Get the last two primes from memory (P_n-1 and P_n-2)
+                    p_n1_info = prime_history[-1]
+                    p_n2_info = prime_history[-2]
+
+                    # Current prime info (P_n)
+                    p_n_info = {'n': candidate_number, 'metrics': metrics}
+
+                    # Extract values for clarity
+                    p_n, p_n1, p_n2 = p_n_info['n'], p_n1_info['n'], p_n2_info['n']
+                    m_n, m_n1, m_n2 = p_n_info['metrics'], p_n1_info['metrics'], p_n2_info['metrics']
+
+                    # 1. Calculate gaps (linear distance and acceleration)
+                    gap_n = p_n - p_n1
+                    gap_n1 = p_n1 - p_n2
+                    gap_ratio = gap_n / gap_n1 if gap_n1 > 0 else 0
+
+                    # 2. Calculate metric ratios (field momentum)
+                    z_vec_mag_ratio = m_n1['z_vector_magnitude'] / m_n2['z_vector_magnitude'] if m_n2[
+                                                                                                     'z_vector_magnitude'] > 0 else 0
+                    z_curvature_ratio = m_n1['z_curvature'] / m_n2['z_curvature'] if m_n2['z_curvature'] > 0 else 0
+
+                    # 3. Calculate angle difference (trajectory deflection)
+                    z_angle_diff = m_n1['z_angle'] - m_n2['z_angle']
+
+                    # 4. Calculate Z-Triangle Area (holistic geometric measure)
+                    x1, y1 = m_n2['z_curvature'], m_n2['z_resonance']
+                    x2, y2 = m_n1['z_curvature'], m_n1['z_resonance']
+                    x3, y3 = m_n['z_curvature'], m_n['z_resonance']
+                    z_triangle_area = 0.5 * abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))
+
+                    # 5. Calculate your proposed Z_trajectory_score: Z = A(B/C)
+                    Z_trajectory_score = p_n * z_vec_mag_ratio
+
+                    # Write the new trajectory stats to the dedicated CSV file
+                    trajectory_writer.writerow([
+                        p_n, p_n1, p_n2,
+                        gap_n, gap_n1, gap_ratio,
+                        z_vec_mag_ratio, z_curvature_ratio, z_angle_diff,
+                        z_triangle_area, Z_trajectory_score
+                    ])
+
+                # Add the current prime to our history for the next iteration's analysis
+                prime_history.append({'n': candidate_number, 'metrics': metrics})
+
                 distance_from_last_stable_state = 0
             else:
                 distance_from_last_stable_state += 1
 
-            writer.writerow([candidate_number, prime_status, skipped, z1, z4])
+            writer.writerow([candidate_number, prime_status, 1 if skipped else 0, z1, z4])
             candidate_number += 1
 
     end_time = time.time()
@@ -269,7 +333,8 @@ if __name__ == '__main__':
     print(f"   - Found {len(found_primes)} primes.")
     if found_primes:
         print(f"   - The last prime is: {found_primes[-1]}")
-    print(f"   - Statistics saved to '{csv_file_name}'")
+    print(f"   - Original stats saved to '{csv_file_name}'")
+    print(f"   - Trajectory stats saved to '{trajectory_csv_file_name}'")
 
     total_numbers_checked = candidate_number - 1
     total_composites = total_numbers_checked - len(found_primes)
