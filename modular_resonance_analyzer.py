@@ -52,7 +52,7 @@ def plot_resonance_vs_divisors(results):
 
 # Run the analysis
 if __name__ == "__main__":
-    nth_prime = 6000
+    nth_prime = 1000
     prime_bound = 30
     results = analyze_until_nth_prime(nth_prime, prime_bound)
     save_to_csv(results)
