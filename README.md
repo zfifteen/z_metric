@@ -77,10 +77,10 @@ The local curvature induced by an entity within its domain is directly proportio
 This is expressed as:  
 Zκ​(n)∝d(n)⋅λ(n)
 
-#### **3\. Specific Formulation for the Domain of Integers (Z+)**
+#### **3. Specific Formulation for the Domain of Integers (Z+)**
 
-Within the Z-Metric framework as implemented, the constant of proportionality is defined as 1/e2, where e is Euler's number. The axiom is thus formulated as the precise equation:  
-Zκ​(n)=e2d(n)⋅ln(n)​
+Within the Z-Metric framework as implemented, the constant of proportionality is defined as 1/e², where e is Euler's number. The axiom is thus formulated as the precise equation:  
+Zκ(n) = \frac{d(n) \cdot \ln(n)}{e^2}
 
 #### **4\. Corollary: The Principle of Minimal Curvature**
 
