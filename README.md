@@ -1,3 +1,82 @@
+# 🔮 Z-Metric Classifier — Proof of Concept of the Numberspace Conjecture
+
+This repository contains a **proof-of-concept classifier** implementing the **Numberspace Conjecture** — the idea that prime numbers and other structured integers emerge from geometric, coprimal, and modular constraints, not randomness.
+
+The classifier is located in:
+
+```
+
+src/main/main.py
+
+````
+
+When run, it performs a full hybrid Z-filter scan, prints summary stats to the console, and writes detailed statistics to a CSV file:
+
+```bash
+python src/main/main.py
+````
+
+You’ll see output like:
+
+```
+✅ Search complete.
+   - Found 6000 primes.
+   - The last prime is: 59359
+   - Statistics saved to '../../prime_stats_hybrid_filter.csv'
+
+--- Hybrid Filter Performance ---
+   - Total Execution Time:        0.35 seconds
+   - Total Numbers Checked:       59359
+   - Total Composites Found:      53359
+   - Composites Filtered Out:     8525
+   - Filter Efficiency:           15.98%
+
+   - Accuracy: The filter successfully found all target primes without false negatives.
+Sanity check passed: The 6000th prime matches the expected value.
+```
+
+---
+
+## 🧠 What Makes This Classifier Novel?
+
+This is **not** a rehash of traditional sieves, probabilistic tests, or random sampling.
+
+Instead, the classifier uses **structural transformations** derived from the Z-metric:
+
+### 1. **Coprimality Density Filter**
+
+* Uses $\zeta(n) = \frac{\phi(n-1)}{n-1}$ as a normalized indicator of modular complexity.
+* This is a true *rate* of coprimality — not a heuristic or lookup.
+
+### 2. **Z-Angle Phase Filter**
+
+* Computes $\theta(n) = \tan^{-1}(\zeta(n))$, projecting each number into a **phase-space** where primes cluster.
+* This approach creates **predictive geometry**, a major departure from flat sieving.
+
+### 3. **Modular Residue Exclusion**
+
+* Filters out known composite-heavy classes using $n \mod 12 \in \{0, 2, 3, 4, 6, 8, 9, 10\}$.
+* Not probabilistic: this leverages **modular topology** embedded in the Z-space.
+
+### 4. **Hybrid Z-Filter**
+
+* Combines all of the above into a single pass, with **no dependence on prior primes**, no ML, and no stochastic methods.
+
+---
+
+## 🧬 Why It Matters
+
+The Z-metric classifier demonstrates that prime structures can be predicted from **invariant ratios and modular geometry**, not random distribution assumptions. It provides a **new lens on arithmetic structure** and a **computational filter** rooted in number-theoretic geometry.
+
+> 🔎 This is the first operational demonstration of the Numberspace Conjecture in code.
+
+---
+
+The remainder of this README describes the Z-theory, mathematical background, and future applications in cryptography, physics, and complex systems.
+
+```
+```
+
 # Z Definition
 
 ## Universal Form
