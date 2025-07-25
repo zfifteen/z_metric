@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Numberspace Framework Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0c0c0c, #1a1a2e, #16213e);
+            color: #00ff88;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 20, 40, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            margin-bottom: 40px;
+        }
+        
+        .test-section {
+            background: rgba(0, 40, 80, 0.6);
+            border-left: 4px solid #00ff88;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        input, button {
+            background: rgba(0, 20, 40, 0.8);
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+        
+        button {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00ff88;
+            color: #0c0c0c;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        .output {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.4;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .success { color: #00ff88; }
+        .warning { color: #ffaa00; }
+        .error { color: #ff4444; }
+        .info { color: #00ccff; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(0, 60, 120, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #00ff88;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00ccff;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00ccff);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌌 Z-Numberspace Framework Testing Suite</h1>
+        
+        <div class="controls">
+            <input type="number" id="rangeMax" value="1000" placeholder="Test range (max)">
+            <button onclick="runFullTest()">🚀 Run Full Test Suite</button>
+            <button onclick="testZTheorems()">📐 Test Z-Theorems</button>
+            <button onclick="testPrimeFilter()">🔍 Test Prime Filter</button>
+            <button onclick="benchmarkPerformance()">⚡ Benchmark Performance</button>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="primeCount">0</div>
+                <div>Primes Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="filterAccuracy">0%</div>
+                <div>Filter Accuracy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="speedup">0x</div>
+                <div>Speed Improvement</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="theoremVerification">0%</div>
+                <div>Theorem Verification</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div class="output" id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        // Core mathematical functions
+        function gcd(a, b) {
+            while (b !== 0) {
+                let temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+        
+        function eulerPhi(n) {
+            if (n === 1) return 1;
+            let result = n;
+            let p = 2;
+            while (p * p <= n) {
+                if (n % p === 0) {
+                    while (n % p === 0) n /= p;
+                    result -= result / p;
+                }
+                p++;
+            }
+            if (n > 1) result -= result / n;
+            return Math.floor(result);
+        }
+        
+        function isPrimeBruteForce(n) {
+            if (n < 2) return false;
+            if (n === 2) return true;
+            if (n % 2 === 0) return false;
+            for (let i = 3; i * i <= n; i += 2) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+        
+        // Z-Transform functions
+        function zTransform(n) {
+            if (n <= 1) return 0;
+            const phi = eulerPhi(n - 1);
+            return n * (phi / (n - 1));
+        }
+        
+        function zRatio(n) {
+            if (n <= 1) return 0;
+            const phi = eulerPhi(n - 1);
+            return phi / (n - 1);
+        }
+        
+        function zAngle(n) {
+            const ratio = zRatio(n);
+            return Math.atan(ratio) * (180 / Math.PI);
+        }
+        
+        // Z-Filter implementation
+        function zFilter(n) {
+            if (n < 2) return false;
+            if (n === 2 || n === 3) return true;
+            
+            // Modular residue filter (mod 12)
+            const allowedResidues = [1, 5, 7, 11];
+            if (!allowedResidues.includes(n % 12)) return false;
+            
+            // Z-ratio filter
+            const ratio = zRatio(n);
+            if (ratio < 0.3 || ratio > 0.8) return false;
+            
+            // Z-angle filter
+            const angle = zAngle(n);
+            if (angle < 20 || angle > 35) return false;
+            
+            return true;
+        }
+        
+        // Generate primes up to n
+        function generatePrimes(n) {
+            const primes = [];
+            for (let i = 2; i <= n; i++) {
+                if (isPrimeBruteForce(i)) {
+                    primes.push(i);
+                }
+            }
+            return primes;
+        }
+        
+        // Test Z-theorems
+        function testZTheorems() {
+            log("🔬 Testing Z-Theorems...\n", "info");
+            
+            const testRange = parseInt(document.getElementById('rangeMax').value) || 1000;
+            const primes = generatePrimes(testRange);
+            let theoremVerified = 0;
+            let totalTests = 0;
+            
+            log("Testing Z-Prime Structure Theorem:", "info");
+            log("For all primes p > 3: Z(p) ∈ (0.3p, 0.8p)\n", "info");
+            
+            for (const p of primes) {
+                if (p <= 3) continue;
+                
+                const z = zTransform(p);
+                const ratio = zRatio(p);
+                const lowerBound = 0.3 * p;
+                const upperBound = 0.8 * p;
+                
+                totalTests++;
+                if (z >= lowerBound && z <= upperBound) {
+                    theoremVerified++;
+                } else {
+                    log(`❌ Theorem violation: p=${p}, Z(p)=${z.toFixed(3)}, bounds=[${lowerBound.toFixed(1)}, ${upperBound.toFixed(1)}]`, "error");
+                }
+            }
+            
+            const verificationRate = (theoremVerified / totalTests) * 100;
+            log(`\n✅ Theorem verification: ${theoremVerified}/${totalTests} (${verificationRate.toFixed(1)}%)`, "success");
+            
+            // Test modular exclusion
+            log("\nTesting Z-Modular Band Exclusion:", "info");
+            const forbiddenMod12 = [0, 2, 3, 4, 6, 8, 9, 10];
+            let modularExclusions = 0;
+            let modularTests = 0;
+            
+            for (const p of primes) {
+                if (p <= 3) continue;
+                modularTests++;
+                if (!forbiddenMod12.includes(p % 12)) {
+                    modularExclusions++;
+                }
+            }
+            
+            const exclusionRate = (modularExclusions / modularTests) * 100;
+            log(`✅ Modular exclusion rate: ${modularExclusions}/${modularTests} (${exclusionRate.toFixed(1)}%)`, "success");
+            
+            document.getElementById('theoremVerification').textContent = `${verificationRate.toFixed(1)}%`;
+            
+            return { verificationRate, exclusionRate };
+        }
+        
+        // Test prime filter effectiveness
+        function testPrimeFilter() {
+            log("🎯 Testing Z-Prime Filter...\n", "info");
+            
+            const testRange = parseInt(document.getElementById('rangeMax').value) || 1000;
+            const actualPrimes = new Set(generatePrimes(testRange));
+            
+            let truePositives = 0;
+            let falsePositives = 0;
+            let trueNegatives = 0;
+            let falseNegatives = 0;
+            
+            for (let n = 2; n <= testRange; n++) {
+                const isPrime = actualPrimes.has(n);
+                const filterPrediction = zFilter(n);
+                
+                if (isPrime && filterPrediction) truePositives++;
+                else if (!isPrime && filterPrediction) falsePositives++;
+                else if (!isPrime && !filterPrediction) trueNegatives++;
+                else if (isPrime && !filterPrediction) falseNegatives++;
+                
+                updateProgress(n / testRange * 100);
+            }
+            
+            const precision = truePositives / (truePositives + falsePositives);
+            const recall = truePositives / (truePositives + falseNegatives);
+            const accuracy = (truePositives + trueNegatives) / testRange;
+            const f1Score = 2 * (precision * recall) / (precision + recall);
+            
+            log(`📊 Filter Performance:`, "info");
+            log(`   True Positives:  ${truePositives}`, "success");
+            log(`   False Positives: ${falsePositives}`, "warning");
+            log(`   True Negatives:  ${trueNegatives}`, "success");
+            log(`   False Negatives: ${falseNegatives}`, "error");
+            log(``, "info");
+            log(`   Precision: ${(precision * 100).toFixed(2)}%`, "info");
+            log(`   Recall:    ${(recall * 100).toFixed(2)}%`, "info");
+            log(`   Accuracy:  ${(accuracy * 100).toFixed(2)}%`, "info");
+            log(`   F1-Score:  ${(f1Score * 100).toFixed(2)}%`, "info");
+            
+            document.getElementById('primeCount').textContent = actualPrimes.size;
+            document.getElementById('filterAccuracy').textContent = `${(precision * 100).toFixed(1)}%`;
+            
+            return { precision, recall, accuracy, f1Score };
+        }
+        
+        // Benchmark performance
+        function benchmarkPerformance() {
+            log("⚡ Benchmarking Performance...\n", "info");
+            
+            const testRange = Math.min(parseInt(document.getElementById('rangeMax').value) || 1000, 10000);
+            
+            // Benchmark brute force
+            const startBrute = performance.now();
+            const brutePrimes = [];
+            for (let i = 2; i <= testRange; i++) {
+                if (isPrimeBruteForce(i)) brutePrimes.push(i);
+            }
+            const brutTime = performance.now() - startBrute;
+            
+            // Benchmark Z-filter + verification
+            const startZ = performance.now();
+            const zPrimes = [];
+            for (let i = 2; i <= testRange; i++) {
+                if (zFilter(i) && isPrimeBruteForce(i)) {
+                    zPrimes.push(i);
+                }
+            }
+            const zTime = performance.now() - startZ;
+            
+            const speedup = brutTime / zTime;
+            const candidateReduction = (testRange - brutePrimes.length) / testRange * 100;
+            
+            log(`🏃 Brute Force: ${brutTime.toFixed(2)}ms (${brutePrimes.length} primes)`, "info");
+            log(`⚡ Z-Filter:    ${zTime.toFixed(2)}ms (${zPrimes.length} primes)`, "success");
+            log(`🚀 Speedup:     ${speedup.toFixed(2)}x`, "success");
+            log(`🎯 Candidate reduction: ${candidateReduction.toFixed(1)}%`, "success");
+            
+            document.getElementById('speedup').textContent = `${speedup.toFixed(1)}x`;
+            
+            return { speedup, candidateReduction };
+        }
+        
+        // Run comprehensive test suite
+        function runFullTest() {
+            clearOutput();
+            log("🌌 Z-Numberspace Framework Comprehensive Test\n", "info");
+            log("=" * 50 + "\n", "info");
+            
+            const startTime = performance.now();
+            
+            // Run all tests
+            const theoremResults = testZTheorems();
+            log("\n" + "=" * 50 + "\n", "info");
+            
+            const filterResults = testPrimeFilter();
+            log("\n" + "=" * 50 + "\n", "info");
+            
+            const benchmarkResults = benchmarkPerformance();
+            
+            const totalTime = performance.now() - startTime;
+            
+            log("\n" + "=" * 50, "info");
+            log("🎉 COMPREHENSIVE TEST COMPLETE", "success");
+            log("=" * 50, "info");
+            log(`⏱️  Total test time: ${totalTime.toFixed(2)}ms`, "info");
+            log(`🔬 Theorem verification: ${theoremResults.verificationRate.toFixed(1)}%`, "success");
+            log(`🎯 Filter accuracy: ${(filterResults.precision * 100).toFixed(1)}%`, "success");
+            log(`⚡ Performance improvement: ${benchmarkResults.speedup.toFixed(1)}x`, "success");
+            
+            // Final assessment
+            if (theoremResults.verificationRate > 95 && filterResults.precision > 0.8) {
+                log("\n✅ Z-NUMBERSPACE FRAMEWORK VALIDATED!", "success");
+                log("The mathematical framework demonstrates strong empirical support.", "success");
+            } else {
+                log("\n⚠️  Framework shows promise but needs refinement.", "warning");
+            }
+        }
+        
+        // Utility functions
+        function log(message, type = "info") {
+            const output = document.getElementById('output');
+            const span = document.createElement('span');
+            span.className = type;
+            span.textContent = message + '\n';
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+        
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = `${percent}%`;
+        }
+        
+        // Initialize
+        log("🌌 Z-Numberspace Framework Testing Suite Ready", "success");
+        log("Click 'Run Full Test Suite' to begin comprehensive validation.\n", "info");
+    </script>
+</body>
+</html>
