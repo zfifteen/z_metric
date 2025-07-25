@@ -1,4 +1,4 @@
-# Proofs
+# Conjectures
 
 # **Z-Filter Equation (Prime Prediction)**
 For a candidate integer \( n \), the Z-Filter returns `True` if \( n \) is likely prime based on:
@@ -76,7 +76,7 @@ Then, for all primes $p > 3$, the following holds:
 > $\zeta(p) \in (0.3, 0.8) \subset (0,1)$
 
 ---
-### ✅ **Proof Sketch:**
+### ✅ **Conjecture Sketch:**
 
 We will prove this by examining the behavior of $\phi(n-1)$ when $n = p$, a prime.
 
@@ -171,7 +171,7 @@ $$
 
 ---
 
-### ✅ **Proof Sketch**
+### ✅ **Conjecture Sketch**
 
 #### **Step 1: Define the Map**
 
