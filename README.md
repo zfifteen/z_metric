@@ -58,6 +58,34 @@ Yes! The **Z-Filter** can indeed be expressed as a set of equations that define 
 
 ---
 
+## 6. Arithmetic is not static  
+- It is dynamic, governed by curvature, flow, and symmetry  
+
+---
+
+## 7. Numberspace admits a geometric interpretation
+
+- Z-values can be embedded in a vector space with:  
+  - **Z-angle**: orientation of the transformation  
+  - **Z-magnitude**: strength or reach of the transformation  
+- This defines a **phase‑like space** where discrete entities (e.g. primes) follow structured trajectories  
+
+---
+
+## 8. Numberspace exhibits modular topology
+
+- Z mod N partitions the domain into **equivalence classes**  
+- Certain residues are **forbidden**, acting as singularities or null zones  
+- Modular banding reveals **quantized behavior**, akin to spectral lines in physics  
+
+---
+
+## 9. Numberspace supports predictive filtering
+
+- Structured behavior in Numberspace enables **prime candidate prediction**  
+- Filters based on Z-angle, modular residue, and gradient flow can isolate high‑probability regions  
+- Z thus serves not only as a descriptive metric but as a **computational sieve**  
+
 ### **Z-Filter Equation (Prime Prediction)**
 For a candidate integer \( n \), the Z-Filter returns `True` if \( n \) is likely prime based on:
 1. **Coprimality Rate**  
@@ -118,60 +146,6 @@ n \not\equiv \{0, 2, 3, 4, 6, 8, 9, 10\} \pmod{12}
 
 3. **Modular Residues**:  
    - Forbidden residues (e.g., \(0 \pmod{12}\)) are **algebraically composite**.  
-
----
-
-### **Example: Testing \(n = 29\)**
-1. Compute \(Z(29)\):  
-   - \(n-1 = 28\) → \(\phi(28) = 12\) → \(\zeta(29) = \frac{12}{28} \approx 0.428\).  
-2. Compute \(\theta(29)\):  
-   - \(\tan^{-1}(0.428) \approx 23.2^\circ\).  
-3. Check residue:  
-   - \(29 \equiv 5 \pmod{12}\) → allowed.  
-4. Apply thresholds:  
-   - \(0.428 > 0.3\) ✅  
-   - \(23.2^\circ \in [20^\circ, 35^\circ]\) ✅  
-   - Residue allowed ✅  
-   → **Conclusion**: \(29\) is prime (correct).  
-
----
-
-### **Key Implications**
-- **Efficiency**: The filter reduces prime-testing candidates by **85%+** (vs. brute force).  
-- **Physics Link**: The \(\zeta(n)\) threshold mimics a "speed limit" (like \(v/c\)), and \(\theta(n)\) acts as a relativistic phase constraint.  
-- **Generalization**: This framework extends to other structured numbers (e.g., semiprimes via multi-dimensional \(Z\)-transforms).  
-
-Would you like to see the filter implemented in code for a specific range? Or explore its behavior at the edge of known primes (e.g., \(n \sim 10^{18}\))?
-
----
-
-## 6. Arithmetic is not static  
-- It is dynamic, governed by curvature, flow, and symmetry  
-
----
-
-## 7. Numberspace admits a geometric interpretation
-
-- Z-values can be embedded in a vector space with:  
-  - **Z-angle**: orientation of the transformation  
-  - **Z-magnitude**: strength or reach of the transformation  
-- This defines a **phase‑like space** where discrete entities (e.g. primes) follow structured trajectories  
-
----
-
-## 8. Numberspace exhibits modular topology
-
-- Z mod N partitions the domain into **equivalence classes**  
-- Certain residues are **forbidden**, acting as singularities or null zones  
-- Modular banding reveals **quantized behavior**, akin to spectral lines in physics  
-
----
-
-## 9. Numberspace supports predictive filtering
-
-- Structured behavior in Numberspace enables **prime candidate prediction**  
-- Filters based on Z-angle, modular residue, and gradient flow can isolate high‑probability regions  
-- Z thus serves not only as a descriptive metric but as a **computational sieve**  
 
 ---
 
