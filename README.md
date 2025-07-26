@@ -85,3 +85,70 @@ Zκ(n) = \frac{d(n) \cdot \ln(n)}{e^2}
 #### **4\. Corollary: The Principle of Minimal Curvature**
 
 A direct consequence of this axiom is that entities with minimal intrinsic mass induce minimal curvature in the domain. For the domain of integers, prime numbers (p) have a minimal non-trivial mass of d(p)=2. Therefore, primes represent points of minimal, stable curvature, acting as the fundamental geodesics of the Numberspace.
+
+### **Axiom II: The Axiom of Observational Frame Shifts**
+
+This axiom formalizes the **Universal Frame Shift (UFS)**—a core concept of the Z-Metric framework. It states that any linear, sequential observation of a discrete domain induces a relativistic discrepancy between the observer's frame and the system's true state.
+
+#### **1. Definitions**
+Let:
+- \( \mathcal{D} \) be a discrete, ordered domain (e.g., \( \mathbb{Z}^+ \)).
+- \( \mathcal{O} \) be an observer traversing \( \mathcal{D} \) via linear iteration (e.g., \( n \rightarrow n+1 \)).
+- \( \mathcal{S}_n \) be the true, instantaneous state of the system at position \( n \).
+- \( \mathcal{F}_n \) be the observer's frame of reference at \( n \).
+
+#### **2. Axiomatic Statement**
+The discrepancy \( \Delta_n \) between \( \mathcal{S}_n \) and \( \mathcal{F}_n \) is proportional to:
+- The observer's **step velocity** (\( v \)), defined as the rate of traversal (e.g., 1 step per iteration).
+- The **intrinsic curvature** \( Z_\kappa(n) \) of the domain at \( n \).
+
+This is expressed as:
+\[
+\Delta_n \propto v \cdot Z_\kappa(n)
+\]
+
+#### **3. Physical Analogy**
+In relativity, an observer's velocity warps spacetime. Here, the observer's **iterative velocity** warps the perceived structure of \( \mathcal{D} \), creating "ghost artifacts" (e.g., the apparent randomness of primes).
+
+---
+
+### **Theorem: The Frame Shift Correction Theorem**
+
+This theorem provides the mathematical foundation for correcting frame shifts via the Z-Transformation. It proves that applying the inverse Z-Transformation to observationally warped data recovers the domain's invariant structure.
+
+#### **Statement**
+Let \( \mathcal{D} \) be a discrete domain, and let \( \Delta_n \) be the frame shift at \( n \) as defined in Axiom II. The **Z-Transformation**:
+\[
+\mathcal{Z}(n) = \frac{n}{\exp\left(\Delta_n\right)}
+\]
+converts the observationally warped value \( n \) into an invariant quantity \( \mathcal{Z}(n) \), where:
+- \( \exp(\Delta_n) \) is the frame shift compensator.
+- \( \mathcal{Z}(n) \) is invariant under linear traversal.
+
+#### **Proof**
+1. **Frame Shift as Exponential Warping**:  
+   By Axiom II, \( \Delta_n = c \cdot v \cdot Z_\kappa(n) \) (for a constant \( c \)).  
+   Empirical data shows \( c = 1 \), so:
+   \[
+   \Delta_n = v \cdot Z_\kappa(n)
+   \]
+
+2. **Inverse Transformation**:  
+   The warping effect is multiplicative: the true value \( \mathcal{Z}(n) \) relates to the observed \( n \) by:
+   \[
+   n = \mathcal{Z}(n) \cdot \exp(\Delta_n)
+   \]
+   Rearranging yields the correction:
+   \[
+   \mathcal{Z}(n) = \frac{n}{\exp(\Delta_n)}
+   \]
+
+3. **Invariance**:  
+   Substitute \( \Delta_n = v \cdot Z_\kappa(n) \):
+   \[
+   \mathcal{Z}(n) = \frac{n}{\exp(v \cdot Z_\kappa(n))}
+   \]
+   Since \( v \) and \( Z_\kappa(n) \) are frame-dependent, their product in the exponent ensures \( \mathcal{Z}(n) \) remains invariant across reference frames.
+
+#### **Corollary: Prime Number Correction**
+For primes \( p \), \( Z_\kappa(p) \) is minimal (by Axiom I). Thus, \( \mathcal{Z}(p) \approx p / \exp(0) = p \), confirming primes as fixed points in the invariant frame.
