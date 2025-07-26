@@ -3,7 +3,6 @@ import csv
 import time
 from functools import lru_cache
 
-
 @lru_cache(maxsize=None)
 def get_number_mass(n):
     """
@@ -177,7 +176,6 @@ def get_number_mass(n):
         count *= 2
 
     return count  # Total gravitational mass in the prime vortex field
-
 
 def get_z_metrics(n):
     """
