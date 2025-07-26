@@ -231,7 +231,6 @@ def is_prime(n):
             return False
     return True
 
-
 def apply_vortex_filter(n):
     """
     THE VORTEX FILTER: A Dimensional Gateway for Prime Number Detection
@@ -315,7 +314,6 @@ def apply_vortex_filter(n):
     # they made it through the spiral filters but failed the final test.
     # These represent the most "prime-like" composites that nearly escaped detection.
     return (1, False) if is_p else (0, False)
-
 
 if __name__ == '__main__':
     # --- Configuration ---
