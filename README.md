@@ -1,12 +1,11 @@
-# ** Z-Metric: A Universal Frame Shift Corrector**
+# **🔮 Z-Metric: A Universal Frame Shift Corrector**
 
-This repository contains the proof-of-concept for the **Z-Metric framework** and the **Numberspace Conjecture**. It presents a novel method for analyzing discrete domains by treating observable patterns (like the prime number distribution) not as random, but as relativistic artifacts of linear observation.  
-The core of this work is a universally applicable system for modeling and correcting these "observational frame shifts." The primary implementation, src/main/main.py, applies this framework to efficiently classify prime numbers.
+This repository contains the proof-of-concept for the **Z-Metric framework** and the **Numberspace Conjecture**. It presents a novel method for analyzing discrete domains by modeling them with geometric properties analogous to spacetime. Observable computational patterns in prime classification exhibit frame-dependent characteristics that can be corrected using relativistic-type transformations. The primary implementation, src/main/main.py, applies this framework to efficiently classify prime numbers.
 
 ### **Key Concepts**
 
-* **The Numberspace Conjecture:** Posits that all discrete domains (integers, financial data, etc.) possess a holistic, interconnected structure. The patterns we see are emergent properties based on how we observe this structure.  
-* **The Universal Frame Shift (UFS):** The act of linear, sequential observation (e.g., an algorithm iterating n \+= 1\) creates a relativistic discrepancy between the observer's frame of reference and the true, instantaneous state of the system.  
+* **The Numberspace Conjecture:** For any discrete ordered domain D, there exists a metric tensor gμν(n) and mass-energy distribution T(n) such that the local curvature Rμν(n) = f(T(n), gμν(n)) determines all observable patterns within D. The apparent "randomness" of patterns results from frame-dependent measurements of this underlying geometric structure. *Note: This framework is currently demonstrated only for integer domains; extension to other discrete domains requires further research.*  
+* **The Universal Frame Shift (UFS):** Linear iteration through discrete domains (e.g., n += 1) creates measurable computational artifacts that can be modeled using frame transformation mathematics. These artifacts affect algorithmic pattern recognition but do not alter the underlying mathematical properties of the domain.  
 * **The Z-Transformation:** A set of equations that acts as a universal correction filter for the UFS. It transforms reference-frame-dependent data into invariant structures, much like Lorentz transformations in physics.
 
 #### **1\. Foundational Metrics: Mass and Spacetime**
