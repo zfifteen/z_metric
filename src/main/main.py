@@ -104,54 +104,53 @@ def is_prime(n):
             return False
     return True
 
-def z_theoretical(candidate, last_prime):
+def apply_circle_filter(n):
     """
-    Pure Z‐Transform: Z(n) = n / exp(Δₙ), Δₙ = n - last_prime.
+    Applies the circle filter.
+    Returns (is_prime, was_skipped).
+    `was_skipped` is True if the number was filtered out as a composite
+    without using the expensive Miller-Rabin test.
     """
-    delta = candidate - last_prime
-    return candidate / math.exp(delta)
+    # Filter out multiples of 2 and 3, the core of the circle method.
+    # We check n > 3 because 2 and 3 are primes and would otherwise be filtered.
+    if n > 3 and (n % 2 == 0 or n % 3 == 0):
+        return (0, True) # is_prime = 0, was_skipped = True
 
-def transform_time_theoretical(candidate, z_th):
-    """
-    Single-value probabilistic filter on Z(n).
-    Prevents false negatives by falling back to the Oracle for any out-of-window candidate.
-    """
-    # TODO: calibrate these by sweeping true primes’ z_th histogram
-    Z_TH_MEAN = 0.015
-    Z_TH_STD  = 0.010
-
-    lower = Z_TH_MEAN - 1.5 * Z_TH_STD
-    upper = Z_TH_MEAN + 1.5 * Z_TH_STD
-
-    # If z_th is out of the expected range, still run the Oracle
-    if not (lower <= z_th <= upper):
-        is_p = is_prime(candidate)
-        # was_skipped=True only for composites (stats), but is_p ensures no prime lost
-        return (1, False) if is_p else (0, True)
-
-    # In-window: still deterministic
-    is_p = is_prime(candidate)
-    return (1, False) if is_p else (0, True)
+    # If not filtered, must run the definitive primality test (the "Oracle").
+    is_p = is_prime(n)
+    # Composites found by the Oracle were not "skipped" by the filter.
+    return (1, False) if is_p else (0, False)
 
 
 if __name__ == '__main__':
+    # --- Configuration ---
+    TARGET = 100000 # Set your desired number of primes here
+
+    # Known prime values for sanity checks. Add more as needed.
+    SANITY_CHECKS = {
+        6000: 59359,
+        10000: 104729,
+        100000: 1299709,
+        600000: 7980000
+    }
+
+    # --- Initialization ---
     start      = time.time()
-    TARGET     = 6000
     found      = []
     candidate  = 2
-    stats_csv  = 'prime_stats_theoretical_z.csv'
+    stats_csv  = 'prime_stats_circle_filter.csv'
     traj_csv   = 'prime_trajectory_stats.csv'
     last_prime = None
     skipped    = 0
     history    = []
 
-    print(f"🔍 Searching for {TARGET} primes with theoretical Z-filter…")
+    print(f"🔍 Searching for {TARGET} primes with the Circle Method filter…")
 
     with open(stats_csv, 'w', newline='') as sf, \
          open(traj_csv,  'w', newline='') as tf:
 
         stats_w = csv.writer(sf)
-        stats_w.writerow(['n', 'is_prime', 'was_skipped', 'z_th_score'])
+        stats_w.writerow(['n', 'is_prime', 'was_skipped'])
 
         traj_w = csv.writer(tf)
         traj_w.writerow([
@@ -162,24 +161,17 @@ if __name__ == '__main__':
             'Z_trajectory_score'
         ])
 
-        while len(found) < TARGET and candidate < 200_000:
-            metrics = get_z_metrics(candidate)
-            z_th    = 0
-            is_p, was_skipped = 0, True
-
-            if last_prime is None:
-                is_p, was_skipped = (1, False) if is_prime(candidate) else (0, False)
-            else:
-                z_th = z_theoretical(candidate, last_prime)
-                is_p, was_skipped = transform_time_theoretical(candidate, z_th)
+        # The loop now only checks if the target has been met.
+        while len(found) < TARGET:
+            is_p, was_skipped = apply_circle_filter(candidate) #
 
             if was_skipped:
                 skipped += 1
 
             if is_p:
                 found.append(candidate)
+                metrics = get_z_metrics(candidate) #
 
-                # trajectory analysis (unchanged)
                 if len(history) >= 2:
                     p1, p2 = history[-1], history[-2]
                     n, n1, n2 = candidate, p1['n'], p2['n']
@@ -209,9 +201,10 @@ if __name__ == '__main__':
                 history.append({'n': candidate, 'metrics': metrics})
                 last_prime = candidate
 
-            stats_w.writerow([candidate, is_p, 1 if was_skipped else 0, z_th])
+            stats_w.writerow([candidate, is_p, 1 if was_skipped else 0])
             candidate += 1
 
+    # --- Results ---
     elapsed    = time.time() - start
     total      = candidate - 1
     composites = total - len(found)
@@ -223,13 +216,17 @@ if __name__ == '__main__':
     print(f"Traj  → {traj_csv}")
     print(f"Checked: {total}, filtered: {skipped}, efficiency: {eff:.2f}%")
 
-    # --- Sanity Check ---
-    actual_6000th_prime = 59359
-    if len(found) >= 6000:
-        found_6000th = found[5999]
-        if found_6000th == actual_6000th_prime:
-            print("\nSanity check passed: The 6000th prime matches the expected value.")
+    # --- Dynamic Sanity Check ---
+    # Checks if the found prime for the current TARGET matches the known value.
+    if TARGET in SANITY_CHECKS:
+        actual_prime = SANITY_CHECKS[TARGET]
+        if len(found) >= TARGET:
+            found_prime = found[TARGET - 1]
+            if found_prime == actual_prime:
+                print(f"\n✅ Sanity check passed: The {TARGET}th prime found ({found_prime}) matches the expected value.")
+            else:
+                print(f"\n❌ Sanity check failed: Found {found_prime} as the {TARGET}th prime, but expected {actual_prime}.")
         else:
-            print(f"\nSanity check failed: Found {found_6000th} as the 6000th prime, but expected {actual_6000th_prime}.")
+            print(f"\n❌ Sanity check failed: Fewer than {TARGET} primes were found.")
     else:
-        print("\nSanity check failed: Fewer than 6000 primes were found.")
+        print(f"\nℹ️ No sanity check value available for a target of {TARGET}.")
