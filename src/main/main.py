@@ -451,14 +451,16 @@ def apply_vortex_filter(n):
 
 if __name__ == '__main__':
     # --- Configuration ---
-    TARGET = 100000 # Set your desired number of primes here
+    TARGET = 1000000 # Set your desired number of primes here
 
     # Known prime values for sanity checks. Add more as needed.
     SANITY_CHECKS = {
         6000: 59359,
         10000: 104729,
         100000: 1299709,
-        600000: 7980000
+        200000: 2750159,
+        500000: 7368787,
+        1000000: 15485863
     }
 
     # --- Initialization ---
