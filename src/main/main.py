@@ -135,7 +135,7 @@ def is_prime(n):
     return True
 
 
-def classify_with_z_score(candidate, z1, z4, candidate_metrics):
+def transform_time(candidate, z1, z4, candidate_metrics):
     """
     The "Observer" or "Probabilistic Filter."
     This function doesn't determine primality with certainty. Instead, it observes
@@ -259,7 +259,7 @@ if __name__ == '__main__':
                     z1 = (z_vec_mag_p / gap) * abs(z_angle_p / 90.0) if z_angle_p else 0
                     z4 = z_curv_p * (z_vec_mag_p / gap)
 
-                    prime_status, skipped = classify_with_z_score(candidate_number, z1, z4, metrics)
+                    prime_status, skipped = transform_time(candidate_number, z1, z4, metrics)
             else:
                 # Initial state check for the first few numbers.
                 prime_status = 1 if is_prime(candidate_number) else 0
