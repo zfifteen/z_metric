@@ -131,6 +131,9 @@ def get_number_mass(n):
              This represents the gravitational coupling strength in the prime vortex
     """
 
+    isqrt = math.isqrt
+    # t_mod = t.__mod__  # avoid attribute lookups
+
     # VACUUM STATE: Numbers ≤ 0 exist in the quantum vacuum
     # No physical reality, no gravitational coupling
     if n <= 0:
@@ -149,12 +152,10 @@ def get_number_mass(n):
     # PHASE 1: BINARY MASS EXTRACTION
     # Powers of 2 create the fundamental "electromagnetic" field structure
     # All even numbers couple to this field with strength (e + 1)
-    e = 0  # Exponent counter for powers of 2
-    while t % 2 == 0:
-        e += 1  # Count each factor of 2
-        t //= 2  # Remove factor from working number
+    e = (t & -t).bit_length() - 1
     if e:
-        count *= (e + 1)  # Add binary mass contribution to total
+        count *= (e + 1)
+        t >>= e
 
     # PHASE 2: ODD PRIME MASS SCANNING
     # Systematic search through odd prime force fields
@@ -434,15 +435,13 @@ def apply_vortex_filter(n):
     # We preserve 2 and 3 themselves as they're the fundamental prime generators
     # that create the vortex structure itself.
     # Preserve the primes themselves
-    if n in (2, 3, 5, 7):
+    if n in (2, 3, 5, 7, 11, 13, 17, 19, 23):
         return (1, False)
 
-    # Exclude anything > 7 that shares a factor with 2, 3, 5, or 7
-    if n > 7 and (
-            n % 2 == 0
-            or n % 3 == 0
-            or n % 5 == 0
-            or n % 7 == 0
+    if n > 23 and (
+            n % 2 == 0 or n % 3 == 0 or n % 5 == 0 or n % 7 == 0 or
+            n % 11 == 0 or n % 13 == 0 or n % 17 == 0 or n % 19 == 0 or
+            n % 23 == 0
     ):
         return (0, True)
 
@@ -458,6 +457,8 @@ def apply_vortex_filter(n):
     # they made it through the spiral filters but failed the final test.
     # These represent the most "prime-like" composites that nearly escaped detection.
     return (1, False) if is_p else (0, False)
+
+
 
 if __name__ == '__main__':
     # --- Configuration ---
