@@ -8,6 +8,7 @@ import csv
 n_max = 5000  # Reduced for execution feasibility
 v = 1         # Traversal velocity
 max_running_points = 360  # Running window for prediction
+ghost_cutoff = 3.0         # Ghost mass threshold for filtering
 
 next_p = nextprime(n_max)
 
@@ -45,12 +46,25 @@ def z_angle(n):
 def ghost_mass(n):
     if n <= 1:
         return 0
-    return log(log(n)) + 2.582  # Approximate average divisor count without factorization
+    return log(log(n)) + 2.582
+
+def ghost_mass_filter(n, cutoff=ghost_cutoff):
+    return ghost_mass(n) < cutoff
 
 # Data Containers
 data = []
+filtered_count = 0
+tested_count = 0
 
 for n in range(2, n_max + 1):
+    g_mass = ghost_mass(n)
+    if ghost_mass_filter(n):
+        tested_count += 1
+        prime_status = 'Prime' if isprime(n) else 'Composite'
+    else:
+        filtered_count += 1
+        prime_status = 'Filtered Composite'
+
     mass = number_mass(n)
     metric = spacetime_metric(n)
     curvature = z_curvature(n)
@@ -58,28 +72,24 @@ for n in range(2, n_max + 1):
     magnitude = z_vector_magnitude(n)
     angle = z_angle(n)
     z_n = Z(n)
-    g_mass = ghost_mass(n)
-    prime_status = 'Prime' if isprime(n) else 'Composite'
+
     data.append([n, mass, metric, curvature, resonance, magnitude, angle, z_n, g_mass, prime_status])
 
 # Separate primes for prediction
 primes = [row for row in data if row[9] == 'Prime']
-
-# Convert to arrays for plotting and prediction
 primes = np.array(primes)
 
-# Compute predicted next prime location using running 360 geodesics (non-factorizing extrapolation based on 6D spacetime metric)
+# Predict next prime using geodesic extrapolation
 prime_ns = primes[:, 0].astype(float)
 if len(prime_ns) > 1:
     num_for_avg = min(max_running_points, len(prime_ns))
     last_k = prime_ns[-num_for_avg:]
     gaps = np.diff(last_k)
-    x = np.log(last_k[:-1])  # Use spacetime metric ln(n) for fit
-    poly = np.polyfit(x, gaps, 1)  # Linear fit on ln(n) vs gap
+    x = np.log(last_k[:-1])
+    poly = np.polyfit(x, gaps, 1)
     predicted_gap = np.polyval(poly, np.log(last_k[-1]))
     predicted_n = last_k[-1] + predicted_gap
     if predicted_n > 1:
-        # Compute full metrics assuming prime
         predicted_mass = 2
         predicted_metric = log(predicted_n)
         predicted_curvature = (predicted_mass * predicted_metric) / (e ** 2)
@@ -110,20 +120,17 @@ with open('z_6d_data.csv', 'w', newline='') as csvfile:
     writer.writerows(data)
 
 # Composites for plotting
-composites = [row for row in data if row[9] == 'Composite']
-
-# Convert to arrays for plotting
+composites = [row for row in data if 'Composite' in row[9]]
 composites = np.array(composites)
-primes = np.array(primes)
 
-# Plotting with trajectory
+# Plotting
 plt.figure(figsize=(10, 6))
 plt.scatter(composites[:, 0].astype(float), composites[:, 7].astype(float), color='orange', label='Composites', s=12, alpha=0.4)
-plt.plot(primes[:, 0].astype(float), primes[:, 7].astype(float), color='blue', label='Prime Trajectory', linewidth=1.5)  # Connect primes for trajectory
-plt.scatter(primes[:, 0].astype(float), primes[:, 7].astype(float), color='blue', s=12, alpha=0.7)  # Overlay prime points
+plt.plot(primes[:, 0].astype(float), primes[:, 7].astype(float), color='blue', label='Prime Trajectory', linewidth=1.5)
+plt.scatter(primes[:, 0].astype(float), primes[:, 7].astype(float), color='blue', s=12, alpha=0.7)
 
-# Highlight the next prime and predicted
-plt.scatter(next_p, z_n, color='red', marker='*', s=50, label='Next Prime (6007)')
+# Highlight next prime and prediction
+plt.scatter(next_p, z_n, color='red', marker='*', s=50, label=f'Next Prime ({next_p})')
 if 'predicted_n' in locals():
     plt.scatter(predicted_n, predicted_z, color='green', marker='^', s=50, label=f'Predicted Next Prime (~{predicted_n:.0f})')
 
@@ -136,3 +143,7 @@ plt.legend()
 plt.grid(True, which='both', ls='--', alpha=0.5)
 plt.tight_layout()
 plt.show()
+
+# Summary
+print(f"Filtered out: {filtered_count} numbers")
+print(f"Sent to Oracle: {tested_count} numbers")
