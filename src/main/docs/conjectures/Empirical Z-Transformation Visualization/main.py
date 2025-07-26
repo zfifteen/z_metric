@@ -5,7 +5,7 @@ from math import log, exp, e, atan, sqrt, fmod
 import csv
 
 # Parameters
-n_max = 6000  # You can increase this up to ~10,000 or more for broader visualization
+n_max = 6000  # Reduced for execution feasibility
 v = 1         # Traversal velocity
 
 # Core Functions
@@ -39,6 +39,11 @@ def z_angle(n):
     resonance = z_resonance(n)
     return atan(resonance / curvature) if curvature != 0 else 0
 
+def ghost_mass(n):
+    if n <= 1:
+        return 0
+    return log(log(n)) + 2.582  # Approximate average divisor count without factorization
+
 # Data Containers
 data = []
 
@@ -50,18 +55,19 @@ for n in range(2, n_max + 1):
     magnitude = z_vector_magnitude(n)
     angle = z_angle(n)
     z_n = Z(n)
+    g_mass = ghost_mass(n)
     prime_status = 'Prime' if isprime(n) else 'Composite'
-    data.append([n, mass, metric, curvature, resonance, magnitude, angle, z_n, prime_status])
+    data.append([n, mass, metric, curvature, resonance, magnitude, angle, z_n, g_mass, prime_status])
 
 # Write to CSV
 with open('z_6d_data.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(['n', 'Number Mass', 'Spacetime Metric', 'Z-Curvature', 'Z-Resonance', 'Z-Vector Magnitude', 'Z-Angle', 'Z(n)', 'Status'])
+    writer.writerow(['n', 'Number Mass', 'Spacetime Metric', 'Z-Curvature', 'Z-Resonance', 'Z-Vector Magnitude', 'Z-Angle', 'Z(n)', 'Ghost Mass', 'Status'])
     writer.writerows(data)
 
 # Separate primes and composites for plotting
-primes = [row for row in data if row[8] == 'Prime']
-composites = [row for row in data if row[8] == 'Composite']
+primes = [row for row in data if row[9] == 'Prime']
+composites = [row for row in data if row[9] == 'Composite']
 
 # Convert to arrays for plotting
 primes = np.array(primes)
