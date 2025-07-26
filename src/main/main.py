@@ -433,8 +433,18 @@ def apply_vortex_filter(n):
     # where the vortex's rotational forces eject composite numbers.
     # We preserve 2 and 3 themselves as they're the fundamental prime generators
     # that create the vortex structure itself.
-    if n > 3 and (n % 2 == 0 or n % 3 == 0):
-        return (0, True)  # Swept away by vortex dynamics, never reached the core
+    # Preserve the primes themselves
+    if n in (2, 3, 5, 7):
+        return (1, False)
+
+    # Exclude anything > 7 that shares a factor with 2, 3, 5, or 7
+    if n > 7 and (
+            n % 2 == 0
+            or n % 3 == 0
+            or n % 5 == 0
+            or n % 7 == 0
+    ):
+        return (0, True)
 
     # ORACLE AT THE VORTEX CENTER:
     # Numbers that survive the initial vortex filtering reach the central "Oracle"
