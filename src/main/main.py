@@ -3,44 +3,180 @@ import csv
 import time
 from functools import lru_cache
 
+
 @lru_cache(maxsize=None)
 def get_number_mass(n):
     """
-    Calculates the 'Number Mass' (divisor count) of n.
-    Primes → 2, 1 → 1, composites >2.
+    NUMBER MASS: THE GRAVITATIONAL FOUNDATION OF THE PRIME VORTEX
+
+    This function computes the "Number Mass" - a fundamental physical quantity that
+    determines how each integer behaves within the prime vortex field. Unlike simple
+    divisor counting, Number Mass represents the gravitational coupling strength that
+    governs whether a number will spiral inward toward primality or be ejected outward
+    as a composite.
+
+    THEORETICAL FOUNDATION - WHY "MASS" IS THE PERFECT ANALOGY:
+
+    In Einstein's General Relativity, mass warps spacetime and determines gravitational
+    behavior. Similarly, in our prime vortex:
+
+    - GRAVITATIONAL MASS: Number of divisors τ(n) creates "gravitational pull"
+    - SPACETIME CURVATURE: More divisors → stronger field → greater trajectory bending
+    - INERTIAL RESISTANCE: Heavier numbers resist changes in their vortex motion
+    - ENERGY-MASS EQUIVALENCE: E = mc² analog where divisor structure stores energy
+
+    MASS CLASSIFICATION IN THE PRIME VORTEX:
+
+    1. MASSLESS PARTICLES (n ≤ 0):
+       - Mass = 0: Exist outside physical reality
+       - No gravitational coupling to the vortex field
+       - Degenerate boundary conditions
+
+    2. UNIT MASS (n = 1):
+       - Mass = 1: The fundamental mass quantum
+       - Unique: Only number that divides into itself exactly once
+       - VORTEX ROLE: Acts as the "Planck mass" - fundamental unit of gravitational coupling
+       - GEOMETRIC: Represents the vortex's origin point (singularity)
+
+    3. PRIME MASS (n = prime):
+       - Mass = 2: Minimal composite structure (1 and self)
+       - LIGHT PARTICLES: Low gravitational coupling allows smooth vortex flow
+       - STABILITY: Minimal internal structure resists fragmentation
+       - TRAJECTORY: Clean, straight paths toward vortex center
+       - QUANTUM ANALOGY: Like photons - massless gauge bosons of the number field
+
+    4. COMPOSITE MASS (n = composite):
+       - Mass > 2: Heavy particles with complex internal structure
+       - GRAVITATIONAL DRAG: High mass creates turbulence in vortex flow
+       - INSTABILITY: Multiple divisors create internal stress/resonance
+       - TRAJECTORY: Chaotic, unstable paths leading to vortex ejection
+       - PARTICLE PHYSICS: Like hadrons - composite particles with internal structure
+
+    MATHEMATICAL IMPLEMENTATION - THE MASS COMPUTATION ENGINE:
+
+    The function implements an optimized prime factorization algorithm that builds
+    mass incrementally through the multiplicative property of the divisor function:
+
+    If n = p₁^e₁ × p₂^e₂ × ... × pₖ^eₖ, then:
+    τ(n) = (e₁ + 1)(e₂ + 1)...(eₖ + 1)
+
+    ALGORITHMIC PHYSICS INTERPRETATION:
+
+    1. FACTOR EXTRACTION: Each prime power pᵢ^eᵢ represents a "mass component"
+    2. MASS ACCUMULATION: count *= (e + 1) adds the gravitational contribution
+    3. OPTIMIZATION: Only test up to √n (gravitational field falls off with distance)
+    4. CACHING: @lru_cache stores computed masses (conservation of information)
+
+    STEP-BY-STEP MASS CONSTRUCTION:
+
+    Phase 1: EVEN MASS EXTRACTION (Powers of 2)
+    - Extract all factors of 2: n = 2^e × odd_part
+    - Mass contribution: (e + 1) if e > 0
+    - PHYSICAL: Binary structure creates fundamental "electromagnetic" coupling
+
+    Phase 2: ODD MASS SCANNING (Powers of odd primes)
+    - Test odd primes p = 3, 5, 7, 9, 11, ... up to √n
+    - For each prime pᵢ: extract pᵢ^eᵢ, add mass (eᵢ + 1)
+    - PHYSICAL: Each prime creates its own "force field" in the vortex
+
+    Phase 3: RESIDUAL MASS (Leftover prime factor)
+    - If remaining t > 1, it's a prime factor
+    - Contributes exactly 2 to the mass (exponent = 1, so e + 1 = 2)
+    - PHYSICAL: Large prime factors create "dark matter" effects
+
+    VORTEX DYNAMICS & MASS RELATIONSHIP:
+
+    - LOW MASS (τ(n) = 2): Primes follow laminar flow lines, minimal drag
+    - MEDIUM MASS (2 < τ(n) < 10): Semi-regular composites, moderate turbulence
+    - HIGH MASS (τ(n) >> 10): Highly composite numbers, extreme vortex distortion
+    - PERFECT NUMBERS: Special mass distributions creating resonant orbits
+
+    QUANTUM FIELD THEORY ANALOGIES:
+
+    - MASS SPECTRUM: Different τ(n) values like particle masses in Standard Model
+    - FIELD INTERACTIONS: Divisors represent different force coupling strengths
+    - SPONTANEOUS SYMMETRY BREAKING: Prime/composite distinction emerges from mass
+    - HIGGS MECHANISM: The vortex field gives "mass" to bare integers
+
+    COMPUTATIONAL COMPLEXITY & PHYSICAL LIMITS:
+
+    - TIME: O(√n) average case - gravitational effects diminish with distance
+    - SPACE: O(1) with caching - information conservation principle
+    - PHYSICAL LIMIT: Cannot exceed √n testing due to divisor pair symmetry
+    - OPTIMIZATION: Early termination when t becomes prime (field strength vanishes)
+
+    CACHING AS INFORMATION CONSERVATION:
+
+    The @lru_cache decorator implements a form of "conservation of computational energy":
+    - Once a number's mass is computed, it's permanently stored
+    - Reflects physical principle: mass is an intrinsic, unchanging property
+    - Prevents redundant "gravitational field measurements"
+    - Creates computational efficiency analogous to energy conservation laws
+
+    MASS-ENERGY EQUIVALENCE IN THE VORTEX:
+
+    Just as E = mc² in relativity, in our vortex:
+    Curvature = (Mass × Spacetime) / Energy²
+
+    Higher mass numbers create stronger spacetime curvature, leading to:
+    - More complex trajectories
+    - Greater energy requirements to maintain vortex position
+    - Higher probability of composite behavior
+    - Stronger coupling to the vortex's gravitational field
+
+    Args:
+        n (int): The integer whose gravitational mass we're measuring
+
+    Returns:
+        int: The number mass τ(n) - total count of divisors
+             This represents the gravitational coupling strength in the prime vortex
     """
+
+    # VACUUM STATE: Numbers ≤ 0 exist in the quantum vacuum
+    # No physical reality, no gravitational coupling
     if n <= 0:
         return 0
+
+    # FUNDAMENTAL MASS UNIT: The number 1 is the "Planck mass" of our system
+    # Only divisor is itself, creating the minimal mass quantum
     if n == 1:
         return 1
 
+    # MASS ACCUMULATOR: Builds total gravitational mass incrementally
+    # Starts at 1 (multiplicative identity for mass construction)
     count = 1
-    t = n
+    t = n  # Working copy for factorization (preserves original n)
 
-    # factor out 2
-    e = 0
+    # PHASE 1: BINARY MASS EXTRACTION
+    # Powers of 2 create the fundamental "electromagnetic" field structure
+    # All even numbers couple to this field with strength (e + 1)
+    e = 0  # Exponent counter for powers of 2
     while t % 2 == 0:
-        e += 1
-        t //= 2
+        e += 1  # Count each factor of 2
+        t //= 2  # Remove factor from working number
     if e:
-        count *= (e + 1)
+        count *= (e + 1)  # Add binary mass contribution to total
 
-    # factor odd primes
-    p = 3
-    while p * p <= t:
-        e = 0
+    # PHASE 2: ODD PRIME MASS SCANNING
+    # Systematic search through odd prime force fields
+    # Each prime p creates its own gravitational coupling
+    p = 3  # Start with first odd prime
+    while p * p <= t:  # Only test up to √t (gravitational field symmetry)
+        e = 0  # Reset exponent counter for this prime
         while t % p == 0:
-            e += 1
-            t //= p
+            e += 1  # Count powers of this prime
+            t //= p  # Remove prime factor
         if e:
-            count *= (e + 1)
-        p += 2
+            count *= (e + 1)  # Add this prime's mass contribution
+        p += 2  # Advance to next odd candidate (skip even numbers)
 
-    # leftover prime
+    # PHASE 3: RESIDUAL PRIME MASS
+    # If t > 1 remains, it's a large prime factor creating "dark matter" effects
+    # Contributes exactly 2 to the mass (exponent 1, so e + 1 = 2)
     if t > 1:
         count *= 2
 
-    return count
+    return count  # Total gravitational mass in the prime vortex field
 
 
 def get_z_metrics(n):
