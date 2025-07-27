@@ -18,7 +18,7 @@ from scipy.spatial import cKDTree
 # Configure root logger
 logging.basicConfig(
     format="%(asctime)s %(levelname)s: %(message)s",
-    level=logging.INFO,
+    level=logging.ERROR,
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
