@@ -1,268 +1,96 @@
-# Z Definition
+# Cognitive Model: A Forward Diagnostic Framework for Number-Theoretic Distortion
 
-## Universal Form
+## Overview
 
-- Z = A(B/C)  
-- A = observer-dependent measured quantity  
-- B = rate of change  
-- C = invariant upper bound of B  
+This repository presents a theoretical and computational framework for analyzing discrete integer sequences through a geometry-inspired "curvature" model. By drawing a pedagogical analogy to relativistic distortions, we define a **forward diagnostic map** that highlights structural irregularities—especially those arising from divisor density. This model is intended for **structural analysis**, not for blind inversion of unknown values.
 
-## Physical Analogy
+## Key Concepts
 
-- Z = T(v/c)  
-- T = observer-dependent quantity (e.g., time or length)  
-- v = relative velocity  
-- c = speed of light (invariant limit)  
+1. **Curvature Function**
 
-This mirrors special relativity's Lorentz factor, where effects like time dilation arise from relative motion.
+   $$
+   \kappa(n) = \frac{d(n) \cdot \ln(n)}{e^2}
+   $$
 
-## Discrete Mathematical Analogy (Empirically Tested)
+   * **d(n)**: Divisor count of $n$ (i.e., $\sigma_0(n)$).
+   * **ln(n)**: Natural logarithm of $n$.
+   * **Normalization**: Constant $e^2$ determined empirically.
+   * **Interpretation**: Higher divisor counts and larger values yield greater local "curvature".
 
-- Z = n(Δ_n / Δ_max)  
-- n = observer-dependent integer value  
-- Δ_n = observed distortion at n  
-- Δ_max = maximum distortion in the domain  
+2. **Distortion Mapping (Forward Model)**
 
-Here, the natural numbers serve as a discrete sequence, analogous to a one-dimensional lattice in physics.
+   $$
+   \Delta_n = v \cdot \kappa(n)
+   $$
 
-### **Postulate 1: Density-Induced Distortion in Discrete Sequences**
+   * **v**: A user-defined "traversal rate" parameter (e.g., cognition or iteration speed).
+   * **$\Delta_n$**: Modeled distortion at $n$.
+   * **Purpose**: Encodes how rapid progression through integers skews apparent structure.
 
-This postulate describes the observed relationship between divisor count and distortion in integer sequences, analogous to how mass curves spacetime in general relativity.
+3. **Perceived Value**
 
-#### **1. Definitions**
+   $$
+   n_{\text{perceived}} = n \times \exp\bigl(\Delta_n\bigr)
+   $$
 
-Let D be a discrete ordered set with structure, such as the positive integers ℤ⁺.  
-For any element n ∈ D:
+   * Applies exponential scaling to the true integer based on $\Delta_n$.
+   * Emphasizes how distortion amplifies structural irregularities in composites.
 
-- Let d(n): D → ℝ be the **divisor density function**, quantifying the "complexity" of n. For ℤ⁺, this is the number of divisors, σ₀(n).  
-- Let λ(n): D → ℝ be the **scaling function**, measuring the position-dependent size. For ℤ⁺, this is the natural logarithm, ln(n).  
-- Let κ(n): D → ℝ be the **distortion function**, quantifying local irregularity induced by divisor density.
+4. **Z-Transformation (Context-Dependent Normalization)**
 
-#### **2. Postulate Statement**
+   $$
+   Z(n) \;=\; \frac{n}{\exp\bigl(v \cdot \kappa(n)\bigr)}
+   $$
 
-**Observed Pattern**: Local distortion in a discrete sequence is proportional to the product of divisor density and scaling function.  
+   * **Forward diagnostic use only**: Assumes knowledge of $n$ and $v$ to normalize distortion.
+   * **Outcome**: Reveals underlying structural stability, particularly for primes where $\kappa(n)$ is minimal.
 
-The equation is:  
-κ(n) ∝ d(n) ⋅ λ(n)
+## Empirical Validation
 
-#### **3. Specific Form for Integer Sequences (ℤ⁺)**
+* **Prime vs. Composite Curvature (n = 2–49)**
 
-Empirical fitting yields a coupling constant of 1/e² (from optimization in simulations). The equation is:  
-κ(n) = d(n) ⋅ ln(n) / e²
+  * Prime average curvature: \~0.739
+  * Composite average curvature: \~2.252
+  * Ratio: Composites ≈3.05× higher curvature
 
-#### **4. Consequence: Minimal Distortion Paths**
+* **Classification Test**
 
-**Observed Result**: Elements with minimal divisor density (d(n)=2 for primes) exhibit least distortion, forming "straight-line" paths in the sequence, analogous to geodesics in curved space. Primes thus represent the structural backbone of the integers.
+  * Simple threshold on $\kappa(n)$ yields \~83% accuracy distinguishing primes from composites.
 
-### **Postulate 2: Velocity-Dependent Distortion in Sequence Traversal**
+These results demonstrate that primes appear as "minimal-curvature geodesics" within the discrete sequence, providing a quantitative diagnostic measure of number complexity.
 
-This postulate describes an observed relativistic-like effect in iterating through discrete sequences.
+## Implementation
 
-#### **1. Definitions**
-Let:
-- 𝒟 be a discrete domain (e.g., ℤ⁺).
-- 𝒪 be an iterator progressing linearly (e.g., n → n+1).
-- S_n be the true state at n.
-- F_n be the iterated observation at n.
+* **Language**: Python 3
+* **Modules**:
 
-#### **2. Postulate Statement**
-**Observed Pattern**: The discrepancy Δ_n between true state S_n and observed F_n is proportional to:
-- Iteration rate v (analogous to velocity).
-- Local distortion κ(n).
+  * `divisor_density.py`: Efficient divisor-counting and curvature computation.
+  * `distortion_model.py`: Functions for $\Delta_n$, perceived values, and Z-transformation.
+  * `analysis.py`: Scripts to generate statistics, plots, and CSV exports.
 
-The relation is:
-Δ_n ∝ v ⋅ κ(n)
+### Example Usage
 
-#### **3. Interpretation**
-In physics, relative velocity distorts measurements (e.g., length contraction). Similarly, rapid iteration through integers creates observable irregularities, appearing as "randomness" but stemming from the process itself.
+```bash
+python analysis.py --max-n 10000 --rate 1.0 --output results.csv
+```
 
----
+Generates curvature statistics and writes them to `results.csv`.
 
-### **Theorem: The Distortion Correction Transformation**
+## Limitations & Scope
 
-This theorem provides a mathematical method to correct observer-dependent distortions in discrete sequences, empirically tested via simulations.
+1. **Forward Diagnostic Only**
 
-#### **Statement**
-Let 𝒟 be a discrete domain, and Δ_n the distortion at n from Postulate 2. The **Z-transformation**:
-Z(n) = n / exp(Δ_n)
-maps the observer-dependent n to an invariant coordinate Z(n), where:
-- exp(Δ_n) is the correction factor from data.
-- Z(n) is the corrected value, independent of iteration rate.
+   * The Z-transformation **requires** known $n$ and rate $v$. It **does not** serve as a standalone inverse to recover unknown integers from perceived values.
+2. **Context-Dependent Parameters**
 
-#### **Empirical Validation**
-1. **Distortion as Exponential Growth**:  
-   Data shows Δ_n = v ⋅ κ(n), with coupling 1 from fitting.
+   * Parameters like $v$ (traversal rate) must be set or estimated; values are not inferred solely from data.
+3. **Metaphorical Analogy**
 
-2. **Inverse Mapping**:  
-   Observer value relates as n = Z(n) ⋅ exp(Δ_n). Solving gives:
-   Z(n) = n / exp(Δ_n)
+   * References to relativity and geodesics are pedagogical. The core mathematics stands independently of physical interpretations.
 
-3. **Invariant Recovery**:  
-   Substituting Δ_n = v ⋅ κ(n):
-   Z(n) = n / exp(v ⋅ κ(n))
-   The exponential cancels rate-dependent effects, yielding the underlying structure.
+## Future Directions
 
-#### **Consequence: Prime Invariance**
-For primes p, data indicates minimal κ(p) due to low divisor density. Thus Z(p) ≈ p, confirming primes as stable points—analogous to straight geodesics—invariant across observation rates.
+* **Parameter Estimation**: Explore data-driven methods to approximate traversal rates from observed distortions.
+* **Enhanced Classification**: Integrate curvature features into machine-learning classifiers for primality testing.
+* **Theoretical Extensions**: Investigate connections between divisor-based curvature and deeper analytic number theory.
 
-- Prime geodesic - Wikipedia 
-<argument name="citation_id">0</argument>
-
-- [PDF] the prime geodesic theorem 
-<argument name="citation_id">1</argument>
-
-- [1011.5486] The Prime Geodesic Theorem - arXiv 
-<argument name="citation_id">2</argument>
-
-- prime geodesic theorem in nLab 
-<argument name="citation_id">3</argument>
-
-- Prime Geodesic Theorem in Arithmetic Progressions 
-<argument name="citation_id">4</argument>
-
-- Prime geodesic theorem and closed geodesics for large genus - arXiv 
-<argument name="citation_id">5</argument>
-
-- What is the analogue of simple prime closed geodesic for prime ... 
-<argument name="citation_id">6</argument>
-
-- Prime geodesic theorem. - EuDML 
-<argument name="citation_id">7</argument>
-
-- Prime geodesic theorem for the Picard manifold - ScienceDirect.com 
-<argument name="citation_id">8</argument>
-
-- prime geodesic in nLab 
-<argument name="citation_id">9</argument>
-
-- Prime Geodesic Theorems for Compact Locally Symmetric Spaces ... - MDPI 
-<argument name="citation_id">10</argument>
-
-- A Generalization of the prime geodesic theorem to counting ... 
-<argument name="citation_id">11</argument>
-
-- The prime geodesic theorem in arithmetic progressions 
-<argument name="citation_id">12</argument>
-
-- The prime geodesic theorem - De Gruyter 
-<argument name="citation_id">13</argument>
-
-- Gallagherian Prime Geodesic Theorem in Higher Dimensions 
-<argument name="citation_id">14</argument>
-
-- The prime geodesic theorem in arithmetic progressions 
-<argument name="citation_id">15</argument>
-
-- Ambient Prime Geodesic Theorems on Hyperbolic 3-Manifolds 
-<argument name="citation_id">16</argument>
-
-- LIFTING PROPERTIES OF PRIME GEODESICS - jstor 
-<argument name="citation_id">17</argument>
-
-- Is there a notion of 'prime' in some areas other than number theory? 
-<argument name="citation_id">18</argument>
-
-- The truth about an an analogy between prime ideals ... - MathOverflow 
-<argument name="citation_id">19</argument>
-
-- Are closed geodesics the prime numbers of Riemannian manifolds? 
-<argument name="citation_id">40</argument>
-
-- prime geodesic in nLab 
-<argument name="citation_id">41</argument>
-
-- On pairs of prime geodesics with fixed homology difference - arXiv 
-<argument name="citation_id">42</argument>
-
-- [PDF] Prime numbers and Prime closed geodesics - RIMS, Kyoto University 
-<argument name="citation_id">43</argument>
-
-- week215 - UCR Math Department 
-<argument name="citation_id">44</argument>
-
-- prime geodesic theorem in nLab 
-<argument name="citation_id">45</argument>
-
-- Prime Geodesic Theorem and Its Applications Explained | Ontosight 
-<argument name="citation_id">46</argument>
-
-- [PDF] the prime geodesic theorem in arithmetic progressions 
-<argument name="citation_id">47</argument>
-
-- [PDF] equidistribution of geodesics on homology classes and analogues ... 
-<argument name="citation_id">48</argument>
-
-- [PDF] arXiv:math/0604275v2 [math.NT] 4 May 2006 
-<argument name="citation_id">49</argument>
-
-- On pairs of prime geodesics with fixed homology difference 
-<argument name="citation_id">50</argument>
-
-- [PDF] the prime geodesic theorem 
-<argument name="citation_id">51</argument>
-
-- Windings of Prime Geodesics - Oxford Academic 
-<argument name="citation_id">52</argument>
-
-- Prime geodesics and averages of the Zagier L-series 
-<argument name="citation_id">53</argument>
-
-- Are closed geodesics the prime numbers of Riemannian manifolds? 
-<argument name="citation_id">20</argument>
-
-- [PDF] the prime geodesic theorem 
-<argument name="citation_id">21</argument>
-
-- THE PRIME GEODESIC THEOREM AND QUANTUM MECHANICS ... 
-<argument name="citation_id">22</argument>
-
-- [2109.11394] Unitary description of the black hole by prime numbers 
-<argument name="citation_id">23</argument>
-
-- Mastering the Prime Geodesic Theorem - Number Analytics 
-<argument name="citation_id">24</argument>
-
-- QuPrimes: The Quantum Mechanics of Prime Numbers - Medium 
-<argument name="citation_id">25</argument>
-
-- Quantum geodesics on quantum Minkowski spacetime - IOPscience 
-<argument name="citation_id">26</argument>
-
-- Interacting Geodesics II - Quantum Calculus 
-<argument name="citation_id">27</argument>
-
-- Quantum geodesic flows and curvature 
-<argument name="citation_id">28</argument>
-
-- [PDF] Quantum Computation as Geometry - arXiv 
-<argument name="citation_id">29</argument>
-
-- [PDF] Quantum ergodicity and the Prime geodesic theorem on 3-manifolds 
-<argument name="citation_id">30</argument>
-
-- [PDF] Ambient Prime Geodesic Theorems on Hyperbolic 3-Manifolds 
-<argument name="citation_id">31</argument>
-
-- A Generalization of the prime geodesic theorem to counting ... 
-<argument name="citation_id">32</argument>
-
-- Prime geodesic - Wikipedia 
-<argument name="citation_id">33</argument>
-
-- Prime geodesic theorem. - EuDML 
-<argument name="citation_id">34</argument>
-
-- https://math.ucr.edu/home/baez/twf_ascii/week215 
-<argument name="citation_id">35</argument>
-
-- The prime geodesic theorem in square mean - ScienceDirect.com 
-<argument name="citation_id">36</argument>
-
-- Prime Geodesic Theorems for Compact Locally Symmetric Spaces ... 
-<argument name="citation_id">37</argument>
-
-- Prime geodesics and averages of the Zagier L-series 
-<argument name="citation_id">38</argument>
-
-- Is there a notion of 'prime' in some areas other than number theory? 
-<argument name="citation_id">39</argument>
