@@ -93,11 +93,14 @@ def main():
                         help="Total primes or twins to reach (including harness)")
     parser.add_argument("--tune-freq", type=int, default=10, help="Fine-tuning frequency")
     parser.add_argument("--twin-mode", action="store_true", help="Focus on twin primes")
+    parser.add_argument("--candidate", type=int, default=None, help="Candidate large number to guess if prime")
     args = parser.parse_args()
 
     # ----- Load and seed streaming window -----
     harness = HarnessDatabase.load(args.coords, args.primes)
     initial_primes = harness.primes.tolist()
+    if not all(isinstance(p, (int, np.integer)) for p in initial_primes):
+        raise ValueError("Initial primes must be integers")
     initial_count = len(initial_primes)
     dims = harness.coords.shape[1]
     if dims < 3:
@@ -109,7 +112,9 @@ def main():
         stream_db.add_point(p, coord)
 
     # ----- Initialize twin tracking -----
-    twin_pairs = [(p, p+2) for i, p in enumerate(initial_primes[:-1]) if p+2 in initial_primes]
+    # Convert initial_primes to a set for faster membership testing
+    prime_set = set(initial_primes)
+    twin_pairs = [(p, p+2) for p in initial_primes[:-1] if (p+2) in prime_set]
     twin_embeds = []
     for p1, p2 in twin_pairs:
         z1 = stream_db.coords[initial_primes.index(p1)]
@@ -154,6 +159,62 @@ def main():
         loss.backward()
         optimizer.step()
 
+    def guess_prime(candidate):
+        nonlocal mr_calls
+        gap = candidate - last_prime
+        if gap <= 0:
+            print("Candidate must be greater than last prime.")
+            return False
+        classical_Z = candidate / np.exp(gap) if gap > 0 else 0.0
+        assumed_dev = classical_Z - mean_Z
+        n_t = torch.tensor([[float(candidate)]] if not args.twin_mode else [[float(twin_count) + 1.0]])
+        delta_t = torch.tensor([[float(gap)]] if not args.twin_mode else [[2.0]])
+        predicted_dev = model(n_t, delta_t).item()
+        tolerance = 0.01
+        if abs(predicted_dev - assumed_dev) < tolerance:
+            print(f"Trajectory match within tolerance {tolerance}. Testing primality...")
+            mr_calls += 1
+            is_prime = miller_rabin(candidate)
+            if args.twin_mode:
+                mr_calls += 1
+                is_next_prime = miller_rabin(candidate + 2)
+                if is_prime and is_next_prime:
+                    print(f"Amazing discovery! The pair ({candidate}, {candidate + 2}) is a twin prime!")
+                    print(f"Details:")
+                    print(f"  Candidate: {candidate}")
+                    print(f"  Gap from last prime: {gap}")
+                    print(f"  Classical Z: {classical_Z:.4f}")
+                    print(f"  Mean Z: {mean_Z:.4f}")
+                    print(f"  Predicted dev/gap: {predicted_dev:.4f}")
+                    print(f"  Assumed dev: {assumed_dev:.4f}")
+                    return True
+                else:
+                    print("Not a twin prime.")
+                    return False
+            else:
+                if is_prime:
+                    print(f"Amazing discovery! {candidate} is a prime!")
+                    print(f"Details:")
+                    print(f"  Gap from last prime: {gap}")
+                    print(f"  Classical Z: {classical_Z:.4f}")
+                    print(f"  Mean Z: {mean_Z:.4f}")
+                    print(f"  Predicted dev: {predicted_dev:.4f}")
+                    print(f"  Assumed dev: {assumed_dev:.4f}")
+                    return True
+                else:
+                    print("Not prime.")
+                    return False
+        else:
+            print(f"Trajectory not matched.")
+            return False
+
+    if args.candidate is not None:
+        if guess_prime(args.candidate):
+            import sys
+            sys.exit(0)
+        else:
+            print("Proceeding with streaming loop.")
+
     # ----- Initialize counters & timer -----
     start_time = time.time()
     ints_scanned = 0
@@ -174,6 +235,8 @@ def main():
 
     theta = compute_theta(window_primes, stream_db.coords)
 
+    guess_prime(last_prime)
+
     # ----- Streaming loop -----
     while (twin_found if args.twin_mode else primes_found) < new_target:
         ints_scanned += 1
@@ -191,6 +254,7 @@ def main():
             is_twin = False
             z_next = None
             if is_prime and args.twin_mode:
+                mr_calls += 1
                 if miller_rabin(current + 2) and current + 2 - current == 2:
                     is_twin = True
                     z_next = embed_z(current + 2, dims)
@@ -279,6 +343,7 @@ def main():
             print(f"  Twin density (KDTree estimate): {avg_density:.4f}")
     if args.forecast:
         print(f"  Forecasts made: {forecasts}")
+    print(f"  Miller-Rabin calls: {mr_calls}")
     print(f"  Total runtime: {total_time:.2f} sec")
     print(f"  Tests per second: {tests_per_s:.2f}")
     print(f"  {'Twins' if args.twin_mode else 'Primes'} per second: {primes_per_s:.2f}")
@@ -291,10 +356,13 @@ def main():
         if args.twin_mode and twin_pairs:
             print(f"  The {twin_count + twin_found}th twin pair is {twin_pairs[-1]}")
             print(f"  Z-embedding (first prime): {stream_db.coords[window_primes.index(twin_pairs[-1][0])].tolist()}")
+            mr_calls += 1
+            mr_calls += 1
             mr_pass = miller_rabin(twin_pairs[-1][0]) and miller_rabin(twin_pairs[-1][1])
         else:
             print(f"  The {last_prime_idx}th prime found is {last_prime}")
             print(f"  Z-embedding: {stream_db.coords[-1].tolist()}")
+            mr_calls += 1
             mr_pass = miller_rabin(last_prime)
         print(f"  Sanity check (Miller-Rabin): {'Passed' if mr_pass else 'Failed'}")
 
