@@ -11,7 +11,8 @@ consistent window shapes, enhanced gap estimation, robustness guards, summary-on
 ordinal prime indexing, adjusted target for total primes (-initial for new search),
 factorization-avoidant primality via Miller-Rabin (no trial division),
 and Z'-metric pre-filter on embeddings for prime proxy (dynamic axes 0,2,4; adaptive theta).
-Handles general dims >=3; removed fixed-6 assumption to fix ValueError.
+Handles general dims >=3; fixed AttributeError by maintaining window_primes in sync with adds.
+Restored original stats in summary per user request.
 """
 
 import argparse
@@ -68,12 +69,11 @@ class ZPredictor(nn.Module):
         refinement = out / self.gamma  # Explicit gamma utilization
         return refinement
 
-def compute_theta(db, axes=(0,2,4), epsilon=0.01):
+def compute_theta(window_primes, coords, axes=(0,2,4), epsilon=0.01):
     """Compute adaptive theta as min Z' from window primes - epsilon."""
-    if len(db.primes) < 2:
+    if len(window_primes) < 2:
         return -np.inf  # No filter if insufficient data
-    primes = np.array(db.primes)
-    coords = np.array(db.coords)
+    primes = np.array(window_primes)
     gaps = np.diff(primes, prepend=primes[0] - 2)  # Dummy gap for first
     i, j, k = [ax % coords.shape[1] for ax in axes]  # Modulo for general dims
     zi, zj, zk = coords[:, i], coords[:, j], coords[:, k]
@@ -107,6 +107,7 @@ def main():
         raise ValueError("Require dims >=3 for Z' pre-filter")
 
     stream_db = StreamingDatabase(window_size=initial_count, dims=dims)
+    window_primes = initial_primes.copy()  # Track primes in sync with rolling window
     for p, coord in zip(initial_primes, harness.coords):
         stream_db.add_point(p, coord)
 
@@ -158,7 +159,7 @@ def main():
         current += 1
 
     # Initial theta from harness
-    theta = compute_theta(stream_db)
+    theta = compute_theta(window_primes, stream_db.coords)
 
     # ----- Streaming loop (by adjusted new prime count; factorization-avoidant) -----
     while primes_found < new_target:
@@ -198,6 +199,9 @@ def main():
                 zvec = base_vec * (Z_corrected / classical_Z) if classical_Z != 0 else base_vec
 
                 stream_db.add_point(current, zvec)
+                window_primes.append(current)
+                if len(window_primes) > initial_count:
+                    window_primes = window_primes[1:]  # Shift to sync with rolling window
 
                 # Update trackers
                 last_prime = current
@@ -221,7 +225,7 @@ def main():
                     optimizer.step()
 
                     # Adaptive theta recompute
-                    theta = compute_theta(stream_db)
+                    theta = compute_theta(window_primes, stream_db.coords)
 
                 # ----- Forecasting using model-based Z prediction (silent) -----
                 if args.forecast:
@@ -250,16 +254,14 @@ def main():
     total_time = time.time() - start_time
     tests_per_s = ints_scanned / total_time if total_time > 0 else float("inf")
     primes_per_s = primes_found / total_time if total_time > 0 else float("inf")
-    skipped_mr = ints_scanned - mr_calls
 
     print("\nStreaming complete.\n")
     print("Summary:")
     print(f"  Total integers scanned: {ints_scanned}")
-    print(f"  Total primes requested: {args.prime_count}")
-    print(f"  New primes found:       {primes_found}")
+    print(f"  Primes requested:       {new_target}")
+    print(f"  Primes found:           {primes_found}")
     if args.forecast:
         print(f"  Forecasts made:         {forecasts}")
-    print(f"  MR tests skipped:       {skipped_mr}")
     print(f"  Total runtime:          {total_time:.2f} sec")
     print(f"  Tests per second:       {tests_per_s:.2f}")
     print(f"  Primes per second:      {primes_per_s:.2f}")
