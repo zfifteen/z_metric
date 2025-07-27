@@ -2,16 +2,18 @@
 """
 stream_driver.py
 
-Stream integers until a specified number of primes is found,
+Stream integers until the total specified primes is reached (including harness),
 manage a 360-frame streaming window of Z-embeddings, and
-print concise predictions plus a final performance summary.
+print only the final performance summary with Miller-Rabin sanity.
 Integrates a neural-inspired layer to adaptively refine Z(n) via learned deviation.
 Updated with review fixes: deviation prediction, gamma scaling, full-vector forecasting,
-consistent window shapes, enhanced gap estimation, and robustness guards.
+consistent window shapes, enhanced gap estimation, robustness guards, summary-only output,
+ordinal prime indexing, and adjusted target for total primes (-initial for new search).
 """
 
 import argparse
 import time
+import random
 
 import numpy as np
 import torch
@@ -19,7 +21,29 @@ import torch.nn as nn
 
 from prime_hologram_harness import HarnessDatabase, is_prime, embed_z
 from prime_hologram_db import StreamingDatabase
-# Removed rolling_predict; using neural model exclusively
+
+def miller_rabin(n, k=10):
+    """Miller-Rabin primality test for sanity check."""
+    if n == 2 or n == 3:
+        return True
+    if n % 2 == 0 or n < 2:
+        return False
+    r, s = 0, n - 1
+    while s % 2 == 0:
+        r += 1
+        s //= 2
+    for _ in range(k):
+        a = random.randrange(2, n - 1)
+        x = pow(a, s, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(r - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
 
 class ZPredictor(nn.Module):
     """
@@ -44,14 +68,14 @@ class ZPredictor(nn.Module):
 def main():
     # ----- Parse arguments -----
     parser = argparse.ArgumentParser(
-        description="Stream until a set number of primes is found, update window, and forecast with neural refinement"
+        description="Stream until the total set number of primes is reached (including harness), update window, and forecast with neural refinement"
     )
     parser.add_argument("--coords", required=True, help="Path to harness coords .npy")
     parser.add_argument("--primes", required=True, help="Path to harness primes .txt")
     parser.add_argument("--forecast", action="store_true",
                         help="Enable forecasting of next-prime embeddings")
     parser.add_argument("--prime-count", type=int, default=10000,
-                        help="How many new primes to find after the harness primes")
+                        help="Total primes to reach (including initial harness primes)")
     parser.add_argument("--tune-freq", type=int, default=10,
                         help="Online fine-tuning frequency (every N primes)")
     args = parser.parse_args()
@@ -65,6 +89,9 @@ def main():
     stream_db = StreamingDatabase(window_size=initial_count, dims=dims)
     for p, coord in zip(initial_primes, harness.coords):
         stream_db.add_point(p, coord)
+
+    # ----- Adjust target for new primes -----
+    new_target = max(0, args.prime_count - initial_count)
 
     # ----- Neural predictor setup -----
     model = ZPredictor(num_epsilons=20, gamma=1.0)
@@ -101,13 +128,14 @@ def main():
     forecasts = 0
 
     last_prime = initial_primes[-1]
+    last_prime_idx = initial_count
     last_gap = primes_arr[-1] - primes_arr[-2] if len(primes_arr) > 1 else dummy_gap
     recent_gaps = list(gaps[-5:])  # For moving-average forecast enhancement
 
     current = last_prime + 1
 
-    # ----- Streaming loop (by prime count) -----
-    while primes_found < args.prime_count:
+    # ----- Streaming loop (by adjusted new prime count) -----
+    while primes_found < new_target:
         ints_scanned += 1
 
         if is_prime(current):
@@ -136,11 +164,10 @@ def main():
 
             # Update trackers
             last_prime = current
+            last_prime_idx = initial_count + primes_found
             last_gap = delta_n
             recent_gaps.append(delta_n)
             recent_gaps = recent_gaps[-5:]  # Rolling last 5 for avg
-
-            print(f"Test: found prime {current}, Z_corr={Z_corrected:.3f}")
 
             # ----- Online fine-tuning -----
             if primes_found % args.tune_freq == 0:
@@ -157,7 +184,7 @@ def main():
                 loss.backward()
                 optimizer.step()
 
-            # ----- Forecasting using model-based Z prediction -----
+            # ----- Forecasting using model-based Z prediction (silent) -----
             if args.forecast:
                 forecasts += 1
                 # Enhanced gap estimate: moving avg of recent gaps
@@ -176,8 +203,7 @@ def main():
                 # Full vector for query
                 next_base = embed_z(int(next_n), dims)  # Cast to int for embed_z
                 next_vec = next_base * (Z_next / classical_next_Z) if classical_next_Z != 0 else next_base
-                cands = stream_db.query_radius(next_vec, radius=4.0)
-                print(f"Forecast #{forecasts}: next_Z≈{Z_next:.3f}, candidates={cands}")
+                _ = stream_db.query_radius(next_vec, radius=4.0)  # Silent query
 
         current += 1
 
@@ -189,8 +215,8 @@ def main():
     print("\nStreaming complete.\n")
     print("Summary:")
     print(f"  Total integers scanned: {ints_scanned}")
-    print(f"  Primes requested:       {args.prime_count}")
-    print(f"  Primes found:           {primes_found}")
+    print(f"  Total primes requested: {args.prime_count}")
+    print(f"  New primes found:       {primes_found}")
     if args.forecast:
         print(f"  Forecasts made:         {forecasts}")
     print(f"  Total runtime:          {total_time:.2f} sec")
@@ -202,8 +228,10 @@ def main():
 
     if last_prime is not None:
         print("\nLast Prime Details:")
-        print(f"  Last prime found:       {last_prime}")
+        print(f"  The {last_prime_idx}th prime found is {last_prime}")
         print(f"  Z-embedding:            {stream_db.coords[-1].tolist()}")
+        mr_pass = miller_rabin(last_prime, k=10)
+        print(f"  Sanity check (Miller-Rabin): {'Passed' if mr_pass else 'Failed'}")
 
 if __name__ == "__main__":
     main()
