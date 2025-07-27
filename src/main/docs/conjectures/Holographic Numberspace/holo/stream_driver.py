@@ -8,7 +8,10 @@ print only the final performance summary with Miller-Rabin sanity.
 Integrates a neural-inspired layer to adaptively refine Z(n) via learned deviation.
 Updated with review fixes: deviation prediction, gamma scaling, full-vector forecasting,
 consistent window shapes, enhanced gap estimation, robustness guards, summary-only output,
-ordinal prime indexing, and adjusted target for total primes (-initial for new search).
+ordinal prime indexing, adjusted target for total primes (-initial for new search),
+factorization-avoidant primality via Miller-Rabin (no trial division),
+and Z'-metric pre-filter on embeddings for prime proxy (dynamic axes 0,2,4; adaptive theta).
+Handles general dims >=3; removed fixed-6 assumption to fix ValueError.
 """
 
 import argparse
@@ -19,11 +22,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from prime_hologram_harness import HarnessDatabase, is_prime, embed_z
+from prime_hologram_harness import HarnessDatabase, embed_z  # Removed is_prime; using Miller-Rabin
 from prime_hologram_db import StreamingDatabase
 
 def miller_rabin(n, k=10):
-    """Miller-Rabin primality test for sanity check."""
+    """Miller-Rabin probabilistic primality test (factorization-avoidant)."""
     if n == 2 or n == 3:
         return True
     if n % 2 == 0 or n < 2:
@@ -65,6 +68,21 @@ class ZPredictor(nn.Module):
         refinement = out / self.gamma  # Explicit gamma utilization
         return refinement
 
+def compute_theta(db, axes=(0,2,4), epsilon=0.01):
+    """Compute adaptive theta as min Z' from window primes - epsilon."""
+    if len(db.primes) < 2:
+        return -np.inf  # No filter if insufficient data
+    primes = np.array(db.primes)
+    coords = np.array(db.coords)
+    gaps = np.diff(primes, prepend=primes[0] - 2)  # Dummy gap for first
+    i, j, k = [ax % coords.shape[1] for ax in axes]  # Modulo for general dims
+    zi, zj, zk = coords[:, i], coords[:, j], coords[:, k]
+    product = zi * zj * zk
+    gm = np.sign(product) * np.abs(product)**(1/3)
+    Zp = gm / np.exp(gaps)
+    min_Zp = np.min(Zp)
+    return min_Zp - epsilon
+
 def main():
     # ----- Parse arguments -----
     parser = argparse.ArgumentParser(
@@ -85,6 +103,8 @@ def main():
     initial_primes = harness.primes.tolist()
     initial_count = len(initial_primes)
     dims = harness.coords.shape[1]
+    if dims < 3:
+        raise ValueError("Require dims >=3 for Z' pre-filter")
 
     stream_db = StreamingDatabase(window_size=initial_count, dims=dims)
     for p, coord in zip(initial_primes, harness.coords):
@@ -126,6 +146,7 @@ def main():
     ints_scanned = 0
     primes_found = 0
     forecasts = 0
+    mr_calls = 0
 
     last_prime = initial_primes[-1]
     last_prime_idx = initial_count
@@ -133,84 +154,103 @@ def main():
     recent_gaps = list(gaps[-5:])  # For moving-average forecast enhancement
 
     current = last_prime + 1
+    if current % 2 == 0:  # Skip even if starting even (post-odd prime)
+        current += 1
 
-    # ----- Streaming loop (by adjusted new prime count) -----
+    # Initial theta from harness
+    theta = compute_theta(stream_db)
+
+    # ----- Streaming loop (by adjusted new prime count; factorization-avoidant) -----
     while primes_found < new_target:
         ints_scanned += 1
 
-        if is_prime(current):
-            primes_found += 1
+        gap = current - last_prime
 
-            # Classical gap and Z (with NaN/zero guards)
-            delta_n = current - last_prime
-            if delta_n == 0: delta_n = 1e-6  # Rare edge
-            exp_delta = np.exp(delta_n)
-            classical_Z = current / exp_delta if exp_delta != 0 else 1.0
+        zvec = embed_z(current, dims)
+        i, j, k = 0, 2, 4
+        zi, zj, zk = zvec[i % dims], zvec[j % dims], zvec[k % dims]  # Modulo for safety
+        product = zi * zj * zk
+        gm = np.sign(product) * np.abs(product)**(1/3)
+        Zp = gm / np.exp(gap) if gap > 0 else 0
 
-            # Neural deviation prediction
-            n_tensor = torch.tensor([[float(current)]], dtype=torch.float32)
-            delta_tensor = torch.tensor([[float(delta_n)]], dtype=torch.float32)
-            with torch.no_grad():
-                dev_Z = model(n_tensor, delta_tensor).item()
+        if Zp >= theta:
+            mr_calls += 1
+            if miller_rabin(current):
+                primes_found += 1
 
-            # Apply correction: multiplicative for scale (Z_corrected = classical_Z * (1 + dev_Z))
-            Z_corrected = classical_Z * (1 + dev_Z)
+                # Classical gap and Z (with NaN/zero guards)
+                delta_n = gap  # Already computed
+                if delta_n == 0: delta_n = 1e-6  # Rare edge
+                exp_delta = np.exp(delta_n)
+                classical_Z = current / exp_delta if exp_delta != 0 else 1.0
 
-            # Embedding with guard against NaN
-            base_vec = embed_z(current, dims)
-            zvec = base_vec * (Z_corrected / classical_Z) if classical_Z != 0 else base_vec
-
-            stream_db.add_point(current, zvec)
-
-            # Update trackers
-            last_prime = current
-            last_prime_idx = initial_count + primes_found
-            last_gap = delta_n
-            recent_gaps.append(delta_n)
-            recent_gaps = recent_gaps[-5:]  # Rolling last 5 for avg
-
-            # ----- Online fine-tuning -----
-            if primes_found % args.tune_freq == 0:
-                # Append new data (using empirical deviation)
-                new_classical_Z = current / np.exp(delta_n)
-                new_dev = new_classical_Z - mean_Z  # Update proxy; could recompute mean
-                X_n = torch.cat([X_n, n_tensor], dim=0)[-initial_count:]
-                X_delta = torch.cat([X_delta, delta_tensor], dim=0)[-initial_count:]
-                Y_dev = torch.cat([Y_dev, torch.tensor([[new_dev]], dtype=torch.float32)], dim=0)[-initial_count:]
-
-                optimizer.zero_grad()
-                dev_pred = model(X_n, X_delta)
-                loss = loss_fn(dev_pred, Y_dev)
-                loss.backward()
-                optimizer.step()
-
-            # ----- Forecasting using model-based Z prediction (silent) -----
-            if args.forecast:
-                forecasts += 1
-                # Enhanced gap estimate: moving avg of recent gaps
-                next_gap = np.mean(recent_gaps) if recent_gaps else last_gap
-                next_n = current + next_gap
-                next_n_t = torch.tensor([[float(next_n)]], dtype=torch.float32)
-                next_gap_t = torch.tensor([[float(next_gap)]], dtype=torch.float32)
+                # Neural deviation prediction
+                n_tensor = torch.tensor([[float(current)]], dtype=torch.float32)
+                delta_tensor = torch.tensor([[float(delta_n)]], dtype=torch.float32)
                 with torch.no_grad():
-                    dev_next = model(next_n_t, next_gap_t).item()
+                    dev_Z = model(n_tensor, delta_tensor).item()
 
-                # Classical next Z with guard
-                exp_next_gap = np.exp(next_gap)
-                classical_next_Z = next_n / exp_next_gap if exp_next_gap != 0 else 1.0
-                Z_next = classical_next_Z * (1 + dev_next)
+                # Apply correction: multiplicative for scale (Z_corrected = classical_Z * (1 + dev_Z))
+                Z_corrected = classical_Z * (1 + dev_Z)
 
-                # Full vector for query
-                next_base = embed_z(int(next_n), dims)  # Cast to int for embed_z
-                next_vec = next_base * (Z_next / classical_next_Z) if classical_next_Z != 0 else next_base
-                _ = stream_db.query_radius(next_vec, radius=4.0)  # Silent query
+                # Embedding with guard against NaN
+                base_vec = zvec  # Already computed
+                zvec = base_vec * (Z_corrected / classical_Z) if classical_Z != 0 else base_vec
 
-        current += 1
+                stream_db.add_point(current, zvec)
+
+                # Update trackers
+                last_prime = current
+                last_gap = delta_n
+                recent_gaps.append(delta_n)
+                recent_gaps = recent_gaps[-5:]  # Rolling last 5 for avg
+
+                # ----- Online fine-tuning -----
+                if primes_found % args.tune_freq == 0:
+                    # Append new data (using empirical deviation)
+                    new_classical_Z = current / np.exp(delta_n)
+                    new_dev = new_classical_Z - mean_Z  # Update proxy; could recompute mean
+                    X_n = torch.cat([X_n, n_tensor], dim=0)[-initial_count:]
+                    X_delta = torch.cat([X_delta, delta_tensor], dim=0)[-initial_count:]
+                    Y_dev = torch.cat([Y_dev, torch.tensor([[new_dev]], dtype=torch.float32)], dim=0)[-initial_count:]
+
+                    optimizer.zero_grad()
+                    dev_pred = model(X_n, X_delta)
+                    loss = loss_fn(dev_pred, Y_dev)
+                    loss.backward()
+                    optimizer.step()
+
+                    # Adaptive theta recompute
+                    theta = compute_theta(stream_db)
+
+                # ----- Forecasting using model-based Z prediction (silent) -----
+                if args.forecast:
+                    forecasts += 1
+                    # Enhanced gap estimate: moving avg of recent gaps
+                    next_gap = np.mean(recent_gaps) if recent_gaps else last_gap
+                    next_n = current + next_gap
+                    next_n_t = torch.tensor([[float(next_n)]], dtype=torch.float32)
+                    next_gap_t = torch.tensor([[float(next_gap)]], dtype=torch.float32)
+                    with torch.no_grad():
+                        dev_next = model(next_n_t, next_gap_t).item()
+
+                    # Classical next Z with guard
+                    exp_next_gap = np.exp(next_gap)
+                    classical_next_Z = next_n / exp_next_gap if exp_next_gap != 0 else 1.0
+                    Z_next = classical_next_Z * (1 + dev_next)
+
+                    # Full vector for query
+                    next_base = embed_z(int(next_n), dims)  # Cast to int for embed_z
+                    next_vec = next_base * (Z_next / classical_next_Z) if classical_next_Z != 0 else next_base
+                    _ = stream_db.query_radius(next_vec, radius=4.0)  # Silent query
+
+        current += 2  # Increment by 2 to skip evens (factorization-avoidant optimization)
 
     # ----- Summary -----
     total_time = time.time() - start_time
     tests_per_s = ints_scanned / total_time if total_time > 0 else float("inf")
     primes_per_s = primes_found / total_time if total_time > 0 else float("inf")
+    skipped_mr = ints_scanned - mr_calls
 
     print("\nStreaming complete.\n")
     print("Summary:")
@@ -219,6 +259,7 @@ def main():
     print(f"  New primes found:       {primes_found}")
     if args.forecast:
         print(f"  Forecasts made:         {forecasts}")
+    print(f"  MR tests skipped:       {skipped_mr}")
     print(f"  Total runtime:          {total_time:.2f} sec")
     print(f"  Tests per second:       {tests_per_s:.2f}")
     print(f"  Primes per second:      {primes_per_s:.2f}")
