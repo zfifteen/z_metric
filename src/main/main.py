@@ -2,344 +2,64 @@ import math
 import csv
 import time
 from functools import lru_cache
-
+import numpy as np
+from sklearn.mixture import GaussianMixture
+from sympy import isprime as sympy_isprime  # For Mersenne checks, leveraging symbolic precision
 
 @lru_cache(maxsize=None)
 def get_number_mass(n):
-    """
-    NUMBER MASS: THE GRAVITATIONAL FOUNDATION OF THE PRIME VORTEX
-
-    This function computes the "Number Mass" - a fundamental physical quantity that
-    determines how each integer behaves within the prime vortex field. Unlike simple
-    divisor counting, Number Mass represents the gravitational coupling strength that
-    governs whether a number will spiral inward toward primality or be ejected outward
-    as a composite.
-
-    THEORETICAL FOUNDATION - WHY "MASS" IS THE PERFECT ANALOGY:
-
-    In Einstein's General Relativity, mass warps spacetime and determines gravitational
-    behavior. Similarly, in our prime vortex:
-
-    - GRAVITATIONAL MASS: Number of divisors τ(n) creates "gravitational pull"
-    - SPACETIME CURVATURE: More divisors → stronger field → greater trajectory bending
-    - INERTIAL RESISTANCE: Heavier numbers resist changes in their vortex motion
-    - ENERGY-MASS EQUIVALENCE: E = mc² analog where divisor structure stores energy
-
-    MASS CLASSIFICATION IN THE PRIME VORTEX:
-
-    1. MASSLESS PARTICLES (n ≤ 0):
-       - Mass = 0: Exist outside physical reality
-       - No gravitational coupling to the vortex field
-       - Degenerate boundary conditions
-
-    2. UNIT MASS (n = 1):
-       - Mass = 1: The fundamental mass quantum
-       - Unique: Only number that divides into itself exactly once
-       - VORTEX ROLE: Acts as the "Planck mass" - fundamental unit of gravitational coupling
-       - GEOMETRIC: Represents the vortex's origin point (singularity)
-
-    3. PRIME MASS (n = prime):
-       - Mass = 2: Minimal composite structure (1 and self)
-       - LIGHT PARTICLES: Low gravitational coupling allows smooth vortex flow
-       - STABILITY: Minimal internal structure resists fragmentation
-       - TRAJECTORY: Clean, straight paths toward vortex center
-       - QUANTUM ANALOGY: Like photons - massless gauge bosons of the number field
-
-    4. COMPOSITE MASS (n = composite):
-       - Mass > 2: Heavy particles with complex internal structure
-       - GRAVITATIONAL DRAG: High mass creates turbulence in vortex flow
-       - INSTABILITY: Multiple divisors create internal stress/resonance
-       - TRAJECTORY: Chaotic, unstable paths leading to vortex ejection
-       - PARTICLE PHYSICS: Like hadrons - composite particles with internal structure
-
-    MATHEMATICAL IMPLEMENTATION - THE MASS COMPUTATION ENGINE:
-
-    The function implements an optimized prime factorization algorithm that builds
-    mass incrementally through the multiplicative property of the divisor function:
-
-    If n = p₁^e₁ × p₂^e₂ × ... × pₖ^eₖ, then:
-    τ(n) = (e₁ + 1)(e₂ + 1)...(eₖ + 1)
-
-    ALGORITHMIC PHYSICS INTERPRETATION:
-
-    1. FACTOR EXTRACTION: Each prime power pᵢ^eᵢ represents a "mass component"
-    2. MASS ACCUMULATION: count *= (e + 1) adds the gravitational contribution
-    3. OPTIMIZATION: Only test up to √n (gravitational field falls off with distance)
-    4. CACHING: @lru_cache stores computed masses (conservation of information)
-
-    STEP-BY-STEP MASS CONSTRUCTION:
-
-    Phase 1: EVEN MASS EXTRACTION (Powers of 2)
-    - Extract all factors of 2: n = 2^e × odd_part
-    - Mass contribution: (e + 1) if e > 0
-    - PHYSICAL: Binary structure creates fundamental "electromagnetic" coupling
-
-    Phase 2: ODD MASS SCANNING (Powers of odd primes)
-    - Test odd primes p = 3, 5, 7, 9, 11, ... up to √n
-    - For each prime pᵢ: extract pᵢ^eᵢ, add mass (eᵢ + 1)
-    - PHYSICAL: Each prime creates its own "force field" in the vortex
-
-    Phase 3: RESIDUAL MASS (Leftover prime factor)
-    - If remaining t > 1, it's a prime factor
-    - Contributes exactly 2 to the mass (exponent = 1, so e + 1 = 2)
-    - PHYSICAL: Large prime factors create "dark matter" effects
-
-    VORTEX DYNAMICS & MASS RELATIONSHIP:
-
-    - LOW MASS (τ(n) = 2): Primes follow laminar flow lines, minimal drag
-    - MEDIUM MASS (2 < τ(n) < 10): Semi-regular composites, moderate turbulence
-    - HIGH MASS (τ(n) >> 10): Highly composite numbers, extreme vortex distortion
-    - PERFECT NUMBERS: Special mass distributions creating resonant orbits
-
-    QUANTUM FIELD THEORY ANALOGIES:
-
-    - MASS SPECTRUM: Different τ(n) values like particle masses in Standard Model
-    - FIELD INTERACTIONS: Divisors represent different force coupling strengths
-    - SPONTANEOUS SYMMETRY BREAKING: Prime/composite distinction emerges from mass
-    - HIGGS MECHANISM: The vortex field gives "mass" to bare integers
-
-    COMPUTATIONAL COMPLEXITY & PHYSICAL LIMITS:
-
-    - TIME: O(√n) average case - gravitational effects diminish with distance
-    - SPACE: O(1) with caching - information conservation principle
-    - PHYSICAL LIMIT: Cannot exceed √n testing due to divisor pair symmetry
-    - OPTIMIZATION: Early termination when t becomes prime (field strength vanishes)
-
-    CACHING AS INFORMATION CONSERVATION:
-
-    The @lru_cache decorator implements a form of "conservation of computational energy":
-    - Once a number's mass is computed, it's permanently stored
-    - Reflects physical principle: mass is an intrinsic, unchanging property
-    - Prevents redundant "gravitational field measurements"
-    - Creates computational efficiency analogous to energy conservation laws
-
-    MASS-ENERGY EQUIVALENCE IN THE VORTEX:
-
-    Just as E = mc² in relativity, in our vortex:
-    Curvature = (Mass × Spacetime) / Energy²
-
-    Higher mass numbers create stronger spacetime curvature, leading to:
-    - More complex trajectories
-    - Greater energy requirements to maintain vortex position
-    - Higher probability of composite behavior
-    - Stronger coupling to the vortex's gravitational field
-
-    Args:
-        n (int): The integer whose gravitational mass we're measuring
-
-    Returns:
-        int: The number mass τ(n) - total count of divisors
-             This represents the gravitational coupling strength in the prime vortex
-    """
-
-    # VACUUM STATE: Numbers ≤ 0 exist in the quantum vacuum
-    # No physical reality, no gravitational coupling
     if n <= 0:
         return 0
-
-    # FUNDAMENTAL MASS UNIT: The number 1 is the "Planck mass" of our system
-    # Only divisor is itself, creating the minimal mass quantum
     if n == 1:
         return 1
-
-    # MASS ACCUMULATOR: Builds total gravitational mass incrementally
-    # Starts at 1 (multiplicative identity for mass construction)
     count = 1
-    t = n  # Working copy for factorization (preserves original n)
-
-    # PHASE 1: BINARY MASS EXTRACTION
-    # Powers of 2 create the fundamental "electromagnetic" field structure
-    # All even numbers couple to this field with strength (e + 1)
-    e = 0  # Exponent counter for powers of 2
+    t = n
+    e = 0
     while t % 2 == 0:
-        e += 1  # Count each factor of 2
-        t //= 2  # Remove factor from working number
+        e += 1
+        t //= 2
     if e:
-        count *= (e + 1)  # Add binary mass contribution to total
-
-    # PHASE 2: ODD PRIME MASS SCANNING
-    # Systematic search through odd prime force fields
-    # Each prime p creates its own gravitational coupling
-    p = 3  # Start with first odd prime
-    while p * p <= t:  # Only test up to √t (gravitational field symmetry)
-        e = 0  # Reset exponent counter for this prime
+        count *= (e + 1)
+    p = 3
+    while p * p <= t:
+        e = 0
         while t % p == 0:
-            e += 1  # Count powers of this prime
-            t //= p  # Remove prime factor
+            e += 1
+            t //= p
         if e:
-            count *= (e + 1)  # Add this prime's mass contribution
-        p += 2  # Advance to next odd candidate (skip even numbers)
-
-    # PHASE 3: RESIDUAL PRIME MASS
-    # If t > 1 remains, it's a large prime factor creating "dark matter" effects
-    # Contributes exactly 2 to the mass (exponent 1, so e + 1 = 2)
+            count *= (e + 1)
+        p += 2
     if t > 1:
         count *= 2
-
-    return count  # Total gravitational mass in the prime vortex field
-
+    return count
 
 def get_z_metrics(n):
-    """
-    Z-METRICS: MULTIDIMENSIONAL VORTEX TRAJECTORY ANALYSIS
-
-    This function computes the complete Z-metric suite that maps each number's position
-    and behavior within the prime vortex. Unlike traditional prime analysis that treats
-    numbers as discrete points, Z-metrics reveal the underlying geometric flows, energy
-    distributions, and dimensional relationships that govern prime emergence.
-
-    THE Z-SPACE MATHEMATICAL FRAMEWORK:
-
-    Z-metrics operate in a hybrid mathematical space where:
-    - Traditional number theory meets differential geometry
-    - Discrete integers exhibit continuous flow properties
-    - Prime/composite behavior emerges from geometric constraints
-    - Each number exists as both particle (discrete value) and wave (trajectory)
-
-    CORE Z-METRIC COMPONENTS EXPLAINED:
-
-    1. NUMBER MASS (m):
-       - PHYSICAL ANALOGY: Gravitational mass in the prime vortex
-       - MATHEMATICAL: Divisor count τ(n) - measures internal complexity
-       - VORTEX ROLE: Heavier numbers (more divisors) experience stronger
-         centrifugal forces, making them more likely to be ejected as composites
-       - PRIMES: Always have mass = 2 (minimal internal structure)
-       - COMPOSITES: Mass > 2, creating drag in the vortex flow
-
-    2. SPACETIME METRIC (gm = ln(n)):
-       - PHYSICAL ANALOGY: The "time coordinate" as we traverse the number line
-       - MATHEMATICAL: Natural logarithm provides the fundamental scaling
-       - VORTEX ROLE: Creates the logarithmic spiral structure - each revolution
-         of the vortex covers exponentially more numerical territory
-       - WHY ln(n): Mirrors prime number theorem's ln(x) density distribution
-       - GEOMETRIC: Converts linear integer sequences into curved spacetime
-
-    3. Z-CURVATURE (zc = (m × ln(n)) / e²):
-       - PHYSICAL ANALOGY: Spacetime curvature around massive objects
-       - MATHEMATICAL: Mass-energy tensor in the vortex field
-       - NORMALIZATION: Division by e² provides dimensional consistency
-       - VORTEX DYNAMICS: Determines how sharply a number's trajectory bends
-       - HIGH CURVATURE: Heavy composites create "gravity wells"
-       - LOW CURVATURE: Primes follow straighter, more stable paths
-
-    4. Z-RESONANCE (zr = (n mod ln(n)) × m / e):
-       - PHYSICAL ANALOGY: Quantum resonance frequency within the vortex
-       - MATHEMATICAL: Modular remainder creates periodic oscillations
-       - AMPLITUDE SCALING: Multiplied by mass for energy-dependent resonance
-       - VORTEX ROLE: Measures how numbers "vibrate" within their spiral arms
-       - RESONANCE PATTERNS: May reveal hidden periodicities in prime distribution
-       - DAMPING FACTOR: Division by e provides natural decay
-
-    5. Z-VECTOR MAGNITUDE (zv = √(zc² + zr²)):
-       - PHYSICAL ANALOGY: Total velocity vector in the vortex flow field
-       - MATHEMATICAL: Euclidean norm in the curvature-resonance plane
-       - ENERGY INTERPRETATION: Total kinetic + potential energy of the number
-       - TRAJECTORY ANALYSIS: Larger magnitude = more dynamic behavior
-       - STABILITY METRIC: Primes may cluster around specific magnitude ranges
-
-    6. Z-ANGLE (za = arctan(zr/zc) in degrees):
-       - PHYSICAL ANALOGY: Phase angle in the complex vortex plane
-       - MATHEMATICAL: Angular position in curvature-resonance coordinates
-       - FLOW DIRECTION: Shows which way the number "leans" in the vortex
-       - CLASSIFICATION POTENTIAL: Different number types may occupy distinct
-         angular sectors (prime zones vs composite zones)
-       - ROTATIONAL DYNAMICS: Captures the spiraling motion through Z-space
-
-    DIMENSIONAL ANALYSIS & UNITS:
-
-    - Number Mass: [dimensionless count]
-    - Spacetime Metric: [logarithmic length]
-    - Z-Curvature: [mass × length / energy²] → [curvature]
-    - Z-Resonance: [length × mass / energy] → [frequency × mass]
-    - Z-Vector Magnitude: [composite energy units]
-    - Z-Angle: [angular degrees]
-
-    VORTEX TRAJECTORY INTERPRETATION:
-
-    Each number traces a unique path through this 6-dimensional Z-space.
-    The trajectory reveals:
-    - STABILITY: How resistant the number is to vortex perturbations
-    - ENERGY FLOW: Direction and magnitude of forces acting on it
-    - RESONANCE COUPLING: How it interacts with the vortex's fundamental frequencies
-    - GEOMETRIC DESTINY: Whether it will spiral inward (prime) or outward (composite)
-
-    QUANTUM-RELATIVISTIC ANALOGIES:
-
-    The Z-metrics framework draws inspiration from:
-    - GENERAL RELATIVITY: Spacetime curvature from mass-energy
-    - QUANTUM MECHANICS: Wave-particle duality and resonance phenomena
-    - FLUID DYNAMICS: Flow fields, vorticity, and streamline analysis
-    - COMPLEX ANALYSIS: Mapping between different mathematical planes
-
-    WHY THIS WORKS FOR PRIME ANALYSIS:
-
-    Traditional approaches treat primes as random exceptions. Z-metrics reveal
-    that primes exist within a highly structured, deterministic flow field.
-    By mapping this field, we can:
-    - Predict prime-rich regions before testing
-    - Understand composite clustering patterns
-    - Reveal hidden geometric relationships
-    - Bridge the gap between discrete and continuous mathematics
-
-    Args:
-        n (int): The number to analyze in Z-space
-
-    Returns:
-        dict: Complete Z-metric profile containing:
-            - number_mass: Divisor count τ(n)
-            - spacetime_metric: ln(n) coordinate
-            - z_curvature: Mass-induced spacetime curvature
-            - z_resonance: Quantum resonance frequency
-            - z_vector_magnitude: Total energy magnitude
-            - z_angle: Phase angle in curvature-resonance plane
-    """
-
-    # BOUNDARY CONDITION: Handle degenerate cases
-    # Numbers ≤ 1 exist outside the main vortex structure
     if n <= 1:
         return dict(
-            number_mass=get_number_mass(n),  # Still has mass (even if zero)
-            spacetime_metric=0,  # No logarithmic extension
-            z_curvature=0,  # No curvature in flat space
-            z_resonance=0,  # No resonance without flow
-            z_vector_magnitude=0,  # Static, no motion
-            z_angle=0  # No phase relationship
+            number_mass=get_number_mass(n),
+            spacetime_metric=0,
+            z_curvature=0,
+            z_resonance=0,
+            z_vector_magnitude=0,
+            z_angle=0
         )
-
-    # FUNDAMENTAL QUANTITIES:
-    m = get_number_mass(n)  # Mass determines gravitational coupling strength
-    gm = math.log(n)  # Spacetime coordinate (logarithmic time)
-
-    # Z-CURVATURE: How the number warps the vortex spacetime
-    # Einstein-like field equation: Curvature ∝ Mass × Spacetime / Energy²
+    m = get_number_mass(n)
+    gm = math.log(n)
     zc = (m * gm) / (math.e ** 2)
-
-    # Z-RESONANCE: Quantum oscillation within the logarithmic spiral
-    # Combines modular periodicity with mass-dependent amplitude
-    rem = n % gm  # Remainder creates periodic oscillation
-    zr = (rem / math.e) * m  # Mass-scaled resonance with natural damping
-
-    # Z-VECTOR MAGNITUDE: Total energy in the curvature-resonance plane
-    # Pythagorean combination gives net flow velocity
+    rem = n % gm
+    zr = (rem / math.e) * m
     zv = math.hypot(zc, zr)
-
-    # Z-ANGLE: Phase relationship between curvature and resonance
-    # Determines the number's "spin direction" in the vortex
     za = math.degrees(math.atan2(zr, zc))
-
     return dict(
-        number_mass=m,  # Gravitational mass in the prime vortex
-        spacetime_metric=gm,  # Logarithmic coordinate system
-        z_curvature=zc,  # Spacetime curvature tensor
-        z_resonance=zr,  # Quantum resonance frequency
-        z_vector_magnitude=zv,  # Total kinetic energy magnitude
-        z_angle=za  # Phase angle in complex Z-plane
+        number_mass=m,
+        spacetime_metric=gm,
+        z_curvature=zc,
+        z_resonance=zr,
+        z_vector_magnitude=zv,
+        z_angle=za
     )
 
 def is_prime(n):
-    """
-    Deterministic Miller–Rabin (32-bit safe bases).
-    """
     if n < 2:
         return False
     for p in (2, 3):
@@ -347,12 +67,10 @@ def is_prime(n):
             return True
         if n % p == 0:
             return False
-
     d, r = n - 1, 0
     while d % 2 == 0:
         d //= 2
         r += 1
-
     for a in (2, 3, 5, 7, 11, 13, 17):
         if a >= n:
             break
@@ -368,94 +86,86 @@ def is_prime(n):
     return True
 
 def apply_vortex_filter(n):
-    """
-    THE VORTEX FILTER: A Dimensional Gateway for Prime Number Detection
-
-    This function implements what we call the "Vortex Filter" - a mathematical construct that
-    transforms the linear sequence of natural numbers into a multi-dimensional spiral pattern
-    where primes naturally separate from composites through rotational dynamics.
-
-    WHY THIS IS A VORTEX (Not Just a Circle):
-
-    1. DIMENSIONAL TRANSFORMATION:
-       Unlike a flat 2D circle that simply eliminates multiples, the vortex operates in
-       higher-dimensional space. When we filter n % 2 == 0 and n % 3 == 0, we're not
-       just excluding numbers - we're creating a 3D helical structure where numbers
-       spiral around a central axis defined by the 6k±1 pattern.
-
-    2. ROTATIONAL SYMMETRY & ANGULAR MOMENTUM:
-       The modular arithmetic (n % 2, n % 3) creates rotational periodicity. Each number
-       has an "angular position" in this vortex:
-       - Numbers ≡ 0 (mod 2): Swept to outer rim (high turbulence, eliminated)
-       - Numbers ≡ 0 (mod 3): Caught in secondary spiral arm (eliminated)
-       - Numbers ≡ 1,5 (mod 6): Flow toward the vortex center (potential primes)
-
-    3. ENERGY GRADIENT & FLOW DYNAMICS:
-       The vortex has distinct energy zones:
-       - HIGH ENERGY (Turbulent): Multiples of 2,3 get "spun out" (72.22% of composites)
-       - LOW ENERGY (Laminar): 6k±1 numbers flow smoothly toward the center
-       - CORE REGION: Where the Miller-Rabin "Oracle" resides, testing survivors
-
-    4. CENTRIPETAL vs CENTRIFUGAL FORCES:
-       - CENTRIFUGAL: Composite numbers are flung outward by divisibility constraints
-       - CENTRIPETAL: Prime candidates are drawn inward toward the testing core
-       - The 72.22% efficiency represents the vortex's "separation power"
-
-    5. SPIRAL TRAJECTORY MATHEMATICS:
-       Unlike linear sieving, numbers follow helical paths. The Z-metrics capture this:
-       - z_curvature: How tightly the number spirals
-       - z_resonance: Oscillation frequency as it moves through the vortex
-       - z_vector_magnitude: Total "flow velocity"
-       - z_angle: Rotational position in the spiral
-
-    6. QUANTUM-LIKE BEHAVIOR:
-       The vortex exhibits dual nature:
-       - WAVE: Continuous spiral flow of the number sequence
-       - PARTICLE: Discrete primality states (prime/composite)
-       - The filter acts as a "measurement" that collapses the wave function
-
-    7. SCALING INVARIANCE:
-       True vortex behavior: the pattern repeats at all scales. Whether testing n=100
-       or n=1,000,000, the same rotational dynamics apply. This is why our efficiency
-       remains consistent across different ranges.
-
-    MATHEMATICAL FOUNDATION:
-    The vortex emerges from the fact that all primes > 3 exist in the form 6k±1.
-    This isn't just a number theory curiosity - it's a geometric constraint that
-    creates the spiral structure. The modular operations (% 2, % 3) act as
-    "dimensional projectors" that map linear integer sequences onto this spiral.
-
-    Returns:
-        tuple: (is_prime, was_skipped)
-            - is_prime: 1 if prime, 0 if composite
-            - was_skipped: True if eliminated by vortex dynamics (didn't reach Oracle)
-    """
-    # VORTEX BOUNDARY CONDITIONS:
-    # Filter out multiples of 2 and 3 - these represent the "exclusion zones"
-    # where the vortex's rotational forces eject composite numbers.
-    # We preserve 2 and 3 themselves as they're the fundamental prime generators
-    # that create the vortex structure itself.
     if n > 3 and (n % 2 == 0 or n % 3 == 0):
-        return (0, True)  # Swept away by vortex dynamics, never reached the core
-
-    # ORACLE AT THE VORTEX CENTER:
-    # Numbers that survive the initial vortex filtering reach the central "Oracle"
-    # (Miller-Rabin test) which provides the definitive primality determination.
-    # This represents the vortex's convergence point where quantum uncertainty
-    # collapses into classical prime/composite states.
+        return (0, True)
     is_p = is_prime(n)
-
-    # CORE DYNAMICS:
-    # Composites discovered by the Oracle weren't "skipped" by the vortex -
-    # they made it through the spiral filters but failed the final test.
-    # These represent the most "prime-like" composites that nearly escaped detection.
     return (1, False) if is_p else (0, False)
+
+# Integrated techniques: Frame shift residues for density clustering
+phi = (1 + np.sqrt(5)) / 2
+
+def frame_shift_residues(n_vals, k):
+    mod_phi = np.mod(n_vals, phi) / phi
+    return phi * np.power(mod_phi, k)
+
+def bin_densities(theta_all, theta_pr, nbins=20):
+    bins = np.linspace(0, phi, nbins + 1)
+    all_counts, _ = np.histogram(theta_all, bins=bins)
+    pr_counts, _ = np.histogram(theta_pr, bins=bins)
+    all_d = all_counts / len(theta_all)
+    pr_d = pr_counts / len(theta_pr)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        enh = (pr_d - all_d) / all_d * 100
+    enh = np.where(all_d > 0, enh, -np.inf)
+    return all_d, pr_d, enh
+
+def fourier_fit(theta_pr, M=5, nbins=100):
+    x = (theta_pr % phi) / phi
+    y, edges = np.histogram(theta_pr, bins=nbins, density=True)
+    centers = (edges[:-1] + edges[1:]) / 2 / phi
+    def design(x):
+        cols = [np.ones_like(x)]
+        for k in range(1, M + 1):
+            cols.append(np.cos(2 * np.pi * k * x))
+            cols.append(np.sin(2 * np.pi * k * x))
+        return np.vstack(cols).T
+    A = design(centers)
+    coeffs, *_ = np.linalg.lstsq(A, y, rcond=None)
+    a = coeffs[0::2]
+    b = coeffs[1::2]
+    return a, b
+
+def gmm_fit(theta_pr, n_components=5):
+    X = ((theta_pr % phi) / phi).reshape(-1, 1)
+    gm = GaussianMixture(n_components=n_components,
+                         covariance_type='full',
+                         random_state=0).fit(X)
+    sigmas = np.sqrt([gm.covariances_[i].flatten()[0]
+                      for i in range(n_components)])
+    return gm, np.mean(sigmas)
+
+def compute_mersenne_primes(primes):
+    return [p for p in primes if sympy_isprime(2 ** p - 1)]
+
+def statistical_summary(primes, mersenne_primes):
+    total_primes = len(primes)
+    total_mersenne = len(mersenne_primes)
+    hit_rate = (total_mersenne / total_primes) * 100 if total_primes > 0 else 0
+    miss_rate = 100 - hit_rate
+
+    print("\n=== Statistical Summary ===")
+    print(f"Total Primes Checked: {total_primes}")
+    print(f"Total Mersenne Primes Found: {total_mersenne}")
+    print(f"Hit Rate: {hit_rate:.2f}%")
+    print(f"Miss Rate: {miss_rate:.2f}%")
+
+    prime_array = np.array(primes)
+    print("\nPrime Distribution Statistics:")
+    print(f"Mean of Primes: {np.mean(prime_array):.2f}")
+    print(f"Median of Primes: {np.median(prime_array):.2f}")
+    print(f"Standard Deviation of Primes: {np.std(prime_array):.2f}")
+
+    if mersenne_primes:
+        mersenne_values = [(1 << p) - 1 for p in mersenne_primes]
+        print("\nMersenne Prime Growth:")
+        print(f"Smallest Mersenne Prime: {min(mersenne_values)}")
+        print(f"Largest Mersenne Prime: {max(mersenne_values)}")
+        print(f"Mersenne Growth Factor: {max(mersenne_values) / min(mersenne_values):.2f}")
 
 if __name__ == '__main__':
     # --- Configuration ---
-    TARGET = 100 # Set your desired number of primes here
+    TARGET = 100
 
-    # Known prime values for sanity checks. Add more as needed.
     SANITY_CHECKS = {
         6000: 59359,
         10000: 104729,
@@ -476,7 +186,7 @@ if __name__ == '__main__':
     print(f"🔍 Searching for {TARGET} primes with the Vortex Method filter…")
 
     with open(stats_csv, 'w', newline='') as sf, \
-         open(traj_csv,  'w', newline='') as tf:
+            open(traj_csv,  'w', newline='') as tf:
 
         stats_w = csv.writer(sf)
         stats_w.writerow(['n', 'is_prime', 'was_skipped'])
@@ -490,16 +200,15 @@ if __name__ == '__main__':
             'Z_trajectory_score'
         ])
 
-        # The loop now only checks if the target has been met.
         while len(found) < TARGET:
-            is_p, was_skipped = apply_vortex_filter(candidate) #
+            is_p, was_skipped = apply_vortex_filter(candidate)
 
             if was_skipped:
                 skipped += 1
 
             if is_p:
                 found.append(candidate)
-                metrics = get_z_metrics(candidate) #
+                metrics = get_z_metrics(candidate)
 
                 if len(history) >= 2:
                     p1, p2 = history[-1], history[-2]
@@ -545,8 +254,6 @@ if __name__ == '__main__':
     print(f"Traj  → {traj_csv}")
     print(f"Checked: {total}, filtered: {skipped}, efficiency: {eff:.2f}%")
 
-    # --- Dynamic Sanity Check ---
-    # Checks if the found prime for the current TARGET matches the known value.
     if TARGET in SANITY_CHECKS:
         actual_prime = SANITY_CHECKS[TARGET]
         if len(found) >= TARGET:
@@ -559,3 +266,46 @@ if __name__ == '__main__':
             print(f"\n❌ Sanity check failed: Fewer than {TARGET} primes were found.")
     else:
         print(f"\nℹ️ No sanity check value available for a target of {TARGET}.")
+
+    # --- Integrated Curvature Analysis ---
+    primes_list = found
+    k_values = np.arange(0.2, 0.4001, 0.002)
+    results = []
+
+    for k in k_values:
+        theta_all = frame_shift_residues(np.arange(1, last_prime + 1), k)
+        theta_pr = frame_shift_residues(np.array(primes_list), k)
+        all_d, pr_d, enh = bin_densities(theta_all, theta_pr, nbins=20)
+        max_enh = np.max(enh)
+        _, sigma_prime = gmm_fit(theta_pr, n_components=5)
+        _, b_coeffs = fourier_fit(theta_pr, M=5)
+        sum_b = np.sum(np.abs(b_coeffs))
+        results.append({
+            'k': k,
+            'max_enhancement': max_enh,
+            'sigma_prime': sigma_prime,
+            'fourier_b_sum': sum_b
+        })
+
+    valid_results = [r for r in results if np.isfinite(r['max_enhancement'])]
+    best = max(valid_results, key=lambda r: r['max_enhancement'])
+    k_star, enh_star = best['k'], best['max_enhancement']
+
+    print("\n=== Refined Prime Curvature Analysis Results ===")
+    print(f"Optimal curvature exponent k* = {k_star:.3f}")
+    print(f"Max mid-bin enhancement = {enh_star:.1f}%")
+    print(f"GMM σ' at k* = {best['sigma_prime']:.3f}")
+    print(f"Σ|b_k| at k* = {best['fourier_b_sum']:.3f}\n")
+
+    print("Sample of k-sweep metrics (every 10th k):")
+    for entry in valid_results[::10]:
+        print(f" k={entry['k']:.3f} | enh={entry['max_enhancement']:.1f}%"
+              f" | σ'={entry['sigma_prime']:.3f}"
+              f" | Σ|b|={entry['fourier_b_sum']:.3f}")
+
+    # --- Mersenne Prime Validation ---
+    mersenne_primes = compute_mersenne_primes(primes_list)
+    print("\nValidated Mersenne Prime Exponents:")
+    print(", ".join(map(str, mersenne_primes)))
+
+    statistical_summary(primes_list, mersenne_primes)
