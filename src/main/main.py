@@ -135,6 +135,8 @@ def gmm_fit(theta_pr, n_components=5):
     return gm, np.mean(sigmas)
 
 def compute_mersenne_primes(primes):
+    # Fixed: Use the primality flag from apply_vortex_filter or directly sympy_isprime for accuracy
+    # Prefer sympy_isprime for large Mersenne to ensure deterministic/robust testing
     return [p for p in primes if sympy_isprime(2 ** p - 1)]
 
 def statistical_summary(primes, mersenne_primes):
@@ -164,9 +166,13 @@ def statistical_summary(primes, mersenne_primes):
 
 if __name__ == '__main__':
     # --- Configuration ---
-    TARGET = 100
+    TARGET = 500  # Increased for broader analysis
 
     SANITY_CHECKS = {
+        53: 241,
+        100: 541,
+        500: 3571,
+        1000: 7919,
         6000: 59359,
         10000: 104729,
         100000: 1299709,
@@ -269,7 +275,7 @@ if __name__ == '__main__':
 
     # --- Integrated Curvature Analysis ---
     primes_list = found
-    k_values = np.arange(0.2, 0.4001, 0.002)
+    k_values = np.arange(0.2, 0.4001, 0.001)  # Finer resolution for enhanced precision
     results = []
 
     for k in k_values:
