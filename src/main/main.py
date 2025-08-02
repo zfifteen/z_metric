@@ -4,7 +4,7 @@ import time
 from functools import lru_cache
 import numpy as np
 from sklearn.mixture import GaussianMixture
-from sympy import isprime as sympy_isprime  # For Mersenne checks, leveraging symbolic precision
+from sympy import isprime as sympy_isprime  # Retained for general use if needed
 
 @lru_cache(maxsize=None)
 def get_number_mass(n):
@@ -91,6 +91,16 @@ def apply_vortex_filter(n):
     is_p = is_prime(n)
     return (1, False) if is_p else (0, False)
 
+# Lucas-Lehmer test for Mersenne primality
+def is_mersenne_prime(p):
+    if p == 2:
+        return True
+    m = (1 << p) - 1
+    s = 4
+    for _ in range(p - 2):
+        s = (s * s - 2) % m
+    return s == 0
+
 # Integrated techniques: Frame shift residues for density clustering
 phi = (1 + np.sqrt(5)) / 2
 
@@ -135,9 +145,7 @@ def gmm_fit(theta_pr, n_components=5):
     return gm, np.mean(sigmas)
 
 def compute_mersenne_primes(primes):
-    # Fixed: Use the primality flag from apply_vortex_filter or directly sympy_isprime for accuracy
-    # Prefer sympy_isprime for large Mersenne to ensure deterministic/robust testing
-    return [p for p in primes if sympy_isprime(2 ** p - 1)]
+    return [p for p in primes if is_mersenne_prime(p)]
 
 def statistical_summary(primes, mersenne_primes):
     total_primes = len(primes)
@@ -158,11 +166,14 @@ def statistical_summary(primes, mersenne_primes):
     print(f"Standard Deviation of Primes: {np.std(prime_array):.2f}")
 
     if mersenne_primes:
-        mersenne_values = [(1 << p) - 1 for p in mersenne_primes]
+        p_min = min(mersenne_primes)
+        p_max = max(mersenne_primes)
         print("\nMersenne Prime Growth:")
-        print(f"Smallest Mersenne Prime: {min(mersenne_values)}")
-        print(f"Largest Mersenne Prime: {max(mersenne_values)}")
-        print(f"Mersenne Growth Factor: {max(mersenne_values) / min(mersenne_values):.2f}")
+        print(f"Smallest Mersenne Prime: 2^{p_min} - 1")
+        print(f"Largest Mersenne Prime: 2^{p_max} - 1")
+        delta_p = p_max - p_min
+        log10_growth = delta_p * math.log10(2)
+        print(f"Mersenne Growth Factor: approximately 2^{delta_p} (10^{log10_growth:.2f})")
 
 if __name__ == '__main__':
     # --- Configuration ---
